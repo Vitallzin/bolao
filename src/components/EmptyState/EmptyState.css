@@ -1,0 +1,14 @@
+.empty-state {
+  background: linear-gradient(180deg, rgba(7, 25, 76, 0.96), rgba(3, 15, 52, 0.96));
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.22);
+  margin: 24px auto 0;
+  max-width: 1180px;
+  padding: 32px;
+}
+
+.empty-state h2 {
+  color: var(--app-title);
+  margin-bottom: 8px;
+}

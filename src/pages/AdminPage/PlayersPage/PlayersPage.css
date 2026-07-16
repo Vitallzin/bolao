@@ -1,0 +1,53 @@
+.players-admin {
+  align-content: start;
+  gap: 12px;
+}
+
+.player-approval-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.player-approval-row {
+  align-items: center;
+  background: rgba(226, 242, 255, 0.08);
+  border: 1px solid rgba(186, 230, 253, 0.14);
+  border-radius: 10px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr auto auto;
+  padding: 12px;
+}
+
+.player-approval-row > div {
+  display: grid;
+  min-width: 0;
+}
+
+.player-approval-row strong {
+  color: var(--app-title);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-approval-row > div span {
+  color: var(--app-muted);
+  font-size: 0.86rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-approval-row__actions {
+  display: flex;
+  gap: 8px;
+}
+
+@media (max-width: 620px) {
+  .player-approval-row {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+}

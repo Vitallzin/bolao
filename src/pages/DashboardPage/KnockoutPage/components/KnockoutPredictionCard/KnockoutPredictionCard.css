@@ -1,0 +1,71 @@
+.knockout-prediction-card {
+  background: linear-gradient(180deg, rgba(7, 25, 76, 0.96), rgba(3, 15, 52, 0.96));
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.22);
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.knockout-prediction-card > strong {
+  color: var(--app-title);
+}
+
+.knockout-prediction-row {
+  align-items: center;
+  background: rgba(226, 242, 255, 0.07);
+  border: 1px dashed rgba(186, 230, 253, 0.16);
+  border-radius: 9px;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(110px, 1fr) 54px 16px 54px minmax(110px, 1fr);
+  padding: 8px;
+}
+
+.knockout-prediction-row input {
+  background: rgba(226, 242, 255, 0.1);
+  border: 1px solid rgba(186, 230, 253, 0.18);
+  border-radius: 8px;
+  color: var(--app-title);
+  font: inherit;
+  min-height: 38px;
+  padding: 7px 8px;
+  text-align: center;
+  width: 100%;
+}
+
+.knockout-prediction-row input:disabled {
+  opacity: 0.6;
+}
+
+.knockout-prediction-row > span {
+  color: var(--app-muted);
+  font-weight: 900;
+  text-align: center;
+}
+
+.knockout-prediction-row .team-badge {
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.knockout-prediction-row .team-badge > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.knockout-prediction-points {
+  color: var(--app-title);
+  justify-self: end;
+}
+
+@media (max-width: 620px) {
+  .knockout-prediction-row {
+    grid-template-columns: 1fr;
+  }
+
+  .knockout-prediction-row > span {
+    display: none;
+  }
+}

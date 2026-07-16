@@ -1,0 +1,178 @@
+.app-shell {
+  --app-card: rgba(7, 25, 76, 0.9);
+  --app-border: rgba(142, 202, 255, 0.18);
+  --app-line: rgba(186, 230, 253, 0.14);
+  --app-muted: rgba(219, 234, 254, 0.68);
+  --app-text: #eaf4ff;
+  --app-title: #ffffff;
+
+  background:
+    radial-gradient(circle at 12% 0%, rgba(56, 225, 255, 0.2), transparent 22rem),
+    radial-gradient(circle at 92% 20%, rgba(30, 91, 255, 0.22), transparent 20rem),
+    linear-gradient(160deg, #020a2a 0%, #001a5c 48%, #020716 100%);
+  color: var(--app-text);
+  min-height: 100svh;
+  padding: 24px;
+  position: relative;
+}
+
+.app-shell::before {
+  background:
+    linear-gradient(rgba(125, 211, 252, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(125, 211, 252, 0.06) 1px, transparent 1px);
+  background-size: 48px 48px;
+  content: '';
+  inset: 0;
+  mask-image: linear-gradient(to bottom, #000, transparent 78%);
+  opacity: 0.7;
+  pointer-events: none;
+  position: fixed;
+}
+
+.app-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
+.app-shell input:not(:disabled):hover,
+.app-shell input:not(:disabled):focus,
+.app-shell select:not(:disabled):hover,
+.app-shell select:not(:disabled):focus {
+  animation: card-border-flow 4.5s linear infinite;
+  background:
+    linear-gradient(180deg, rgba(7, 25, 76, 0.96), rgba(3, 15, 52, 0.96)) padding-box,
+    var(--interactive-border) border-box;
+  border-color: transparent;
+  box-shadow: 0 0 24px rgba(14, 165, 233, 0.18);
+}
+
+.confirm-card input:not(:disabled):hover,
+.confirm-card input:not(:disabled):focus {
+  animation: card-border-flow 4.5s linear infinite;
+  background:
+    linear-gradient(180deg, #ffffff, #eef6ff) padding-box,
+    var(--interactive-border) border-box;
+}
+
+.content-grid {
+  display: grid;
+  gap: 18px;
+  margin: 24px auto 0;
+  max-width: 1180px;
+}
+
+.section-heading {
+  align-items: center;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+}
+
+.section-heading h2 {
+  color: var(--app-title);
+  margin: 4px 0 0;
+}
+
+.heading-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.heading-actions select {
+  background: rgba(226, 242, 255, 0.1);
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  color: var(--app-title);
+  font: inherit;
+  min-height: 42px;
+  padding: 8px 10px;
+}
+
+.heading-actions select option {
+  background: #061844;
+  color: #ffffff;
+}
+
+.eyebrow {
+  color: #7dd3fc;
+  display: inline-flex;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.app-toast {
+  animation:
+    toast-in 0.24s ease-out,
+    card-border-flow 4.5s linear infinite;
+  background:
+    linear-gradient(180deg, rgba(7, 25, 76, 0.98), rgba(3, 15, 52, 0.98)) padding-box,
+    var(--interactive-border) border-box;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  box-shadow:
+    0 20px 54px rgba(0, 0, 0, 0.28),
+    0 0 28px rgba(14, 165, 233, 0.18);
+  color: #e0f2fe;
+  font-weight: 800;
+  margin: 0;
+  max-width: min(360px, calc(100vw - 32px));
+  padding: 12px 14px;
+  position: fixed;
+  right: 24px;
+  top: 24px;
+  z-index: 30;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.status-pill {
+  background: rgba(56, 225, 255, 0.12);
+  border: 1px solid rgba(56, 225, 255, 0.4);
+  border-radius: 999px;
+  color: #9becff;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 8px 14px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.status-pill--locked {
+  background: rgba(255, 99, 132, 0.14);
+  border-color: rgba(255, 138, 163, 0.5);
+  color: #ffb3c1;
+}
+
+@media (max-width: 900px) {
+  .section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 620px) {
+  .app-shell {
+    padding: 16px;
+  }
+
+  .app-toast {
+    left: 16px;
+    right: 16px;
+    top: 16px;
+  }
+}

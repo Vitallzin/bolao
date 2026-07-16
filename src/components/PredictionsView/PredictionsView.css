@@ -1,0 +1,145 @@
+.predictions-step-nav {
+  justify-self: end;
+}
+
+.predictions-step-nav h2 {
+  font-size: 1.2rem;
+  min-width: 180px;
+}
+
+.match-days {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.match-day {
+  display: grid;
+  gap: 10px;
+}
+
+.match-day h3 {
+  color: var(--app-title);
+  font-size: 1.05rem;
+  margin: 0;
+  text-align: center;
+}
+
+.match-list {
+  display: grid;
+  gap: 10px;
+}
+
+.match-row {
+  align-items: center;
+  background: linear-gradient(180deg, rgba(7, 25, 76, 0.96), rgba(3, 15, 52, 0.96));
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.22);
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(120px, 1fr) 58px 18px 58px minmax(120px, 1fr);
+  padding: 10px;
+}
+
+.match-row input {
+  background: rgba(226, 242, 255, 0.1);
+  border: 1px solid rgba(186, 230, 253, 0.18);
+  border-radius: 8px;
+  box-sizing: border-box;
+  color: var(--app-title);
+  font: inherit;
+  min-height: 42px;
+  padding: 8px 10px;
+  text-align: center;
+  width: 100%;
+}
+
+.match-row input:disabled {
+  background: rgba(148, 163, 184, 0.12);
+  color: rgba(219, 234, 254, 0.55);
+}
+
+.versus {
+  color: var(--app-muted);
+  font-weight: 800;
+  text-align: center;
+}
+
+.prediction-knockout-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.leg-toggle {
+  background: rgba(2, 10, 42, 0.52);
+  border: 1px solid var(--app-border);
+  border-radius: 999px;
+  display: inline-flex;
+  gap: 6px;
+  justify-self: center;
+  margin: 0 auto;
+  padding: 6px;
+}
+
+.leg-toggle button {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: var(--app-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 800;
+  min-height: 38px;
+  padding: 8px 22px;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.leg-toggle button.active {
+  animation: card-border-flow 4.5s linear infinite;
+  background:
+    linear-gradient(180deg, #ffffff, #b9e6ff) padding-box,
+    var(--interactive-border) border-box;
+  border-color: transparent;
+  box-shadow: 0 10px 26px rgba(14, 165, 233, 0.22);
+  color: #001e67;
+}
+
+.leg-toggle button:not(.active):hover {
+  background: rgba(226, 242, 255, 0.09);
+}
+
+@media (max-width: 900px) {
+  .match-days {
+    grid-template-columns: 1fr;
+  }
+
+  .prediction-knockout-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .predictions-step-nav {
+    justify-self: stretch;
+  }
+
+  .match-row {
+    grid-template-columns: 1fr 64px 18px 64px 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .match-row {
+    gap: 6px;
+    grid-template-columns: minmax(0, 1fr) 48px 12px 48px minmax(0, 1fr);
+    padding: 10px 8px;
+  }
+
+  .match-row input {
+    min-height: 46px;
+    padding: 8px 4px;
+  }
+}

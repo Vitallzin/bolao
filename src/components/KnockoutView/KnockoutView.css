@@ -1,0 +1,79 @@
+.knockout-phase-nav {
+  align-items: center;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 36px auto 36px;
+  justify-content: center;
+}
+
+.knockout-phase-nav h3 {
+  color: var(--app-title);
+  font-size: 1.35rem;
+  margin: 0;
+}
+
+.knockout-phase-nav button {
+  background: rgba(226, 242, 255, 0.09);
+  border: 1px solid rgba(186, 230, 253, 0.16);
+  border-radius: 999px;
+  color: var(--app-text);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
+  height: 36px;
+  width: 36px;
+}
+
+.knockout-phase-nav button:hover {
+  animation: card-border-flow 4.5s linear infinite;
+  background:
+    linear-gradient(180deg, #ffffff, #b9e6ff) padding-box,
+    var(--interactive-border) border-box;
+  border-color: transparent;
+  box-shadow: 0 0 24px rgba(14, 165, 233, 0.18);
+  color: #001e67;
+}
+
+.knockout-playoffs__grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+}
+
+.knockout-playoffs {
+  display: grid;
+  gap: 12px;
+}
+
+.knockout-playoffs__heading h3 {
+  color: var(--app-title);
+  margin: 4px 0 0;
+}
+
+.knockout-playoff-card {
+  background: linear-gradient(180deg, rgba(7, 25, 76, 0.96), rgba(3, 15, 52, 0.96));
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.22);
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.knockout-playoff-card > span:last-child,
+.knockout-playoff-card strong {
+  color: var(--app-muted);
+  font-weight: 800;
+}
+
+@media (max-width: 900px) {
+  .knockout-playoffs__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .knockout-playoffs__grid {
+    grid-template-columns: 1fr;
+  }
+}

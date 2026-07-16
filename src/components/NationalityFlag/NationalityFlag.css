@@ -1,0 +1,12 @@
+.nationality-flag--other {
+  align-items: center;
+  background: rgba(226, 242, 255, 0.12);
+  border: 1px solid rgba(186, 230, 253, 0.24);
+  border-radius: 4px;
+  color: var(--app-muted, #64748b);
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 0.7rem;
+  font-weight: 900;
+  justify-content: center;
+}

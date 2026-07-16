@@ -1,0 +1,92 @@
+.table-wrap {
+  background: linear-gradient(180deg, rgba(7, 25, 76, 0.96), rgba(3, 15, 52, 0.96));
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  overflow-x: auto;
+}
+
+table {
+  border-collapse: collapse;
+  min-width: 720px;
+  width: 100%;
+}
+
+th,
+td {
+  border-bottom: 1px solid var(--app-line);
+  padding: 13px 14px;
+  text-align: left;
+}
+
+th {
+  color: #7dd3fc;
+}
+
+th:not(:first-child),
+td:not(:first-child) {
+  text-align: center;
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+@media (max-width: 620px) {
+  .table-wrap {
+    overflow-x: hidden;
+  }
+
+  table {
+    min-width: 0;
+    table-layout: fixed;
+  }
+
+  th,
+  td {
+    padding: 9px 4px;
+  }
+
+  th.col-optional,
+  td.col-optional {
+    display: none;
+  }
+
+  th:first-child,
+  td:first-child {
+    padding-left: 8px;
+    width: 52%;
+  }
+
+  th:not(:first-child):not(.col-optional),
+  td:not(:first-child):not(.col-optional) {
+    width: 16%;
+  }
+
+  th,
+  td {
+    font-size: 0.8rem;
+  }
+
+  .table-wrap .team-badge {
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .table-wrap .team-badge img {
+    height: 18px;
+    width: 18px;
+  }
+
+  .table-wrap .team-badge__chip {
+    font-size: 0.66rem;
+    height: 24px;
+    min-width: 30px;
+    padding: 0 4px;
+  }
+
+  .table-wrap .team-badge > span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "bolao-notify",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "notify": "node index.mjs"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0",
+    "resend": "^4.0.0"
+  }
+}

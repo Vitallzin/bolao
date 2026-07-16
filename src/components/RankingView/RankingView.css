@@ -1,0 +1,54 @@
+.ranking-list {
+  display: grid;
+  gap: 10px;
+}
+
+.ranking-row {
+  align-items: center;
+  background: linear-gradient(180deg, rgba(7, 25, 76, 0.96), rgba(3, 15, 52, 0.96));
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.22);
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 44px 1fr auto;
+  padding: 14px 16px;
+}
+
+.ranking-row div {
+  display: grid;
+}
+
+.ranking-row span {
+  color: var(--app-muted);
+}
+
+.position {
+  align-items: center;
+  background: rgba(125, 211, 252, 0.16);
+  border-radius: 8px;
+  color: #7dd3fc !important;
+  display: inline-flex;
+  font-weight: 900;
+  height: 36px;
+  justify-content: center;
+  width: 36px;
+}
+
+.position--gold {
+  background: linear-gradient(160deg, #fff3c4, #e6b325 55%, #a9750f) !important;
+  box-shadow: 0 0 18px rgba(230, 179, 37, 0.45);
+  color: #4a2f00 !important;
+}
+
+.position--silver {
+  background: linear-gradient(160deg, #f4f8ff, #b9c4d6 55%, #7c8aa0) !important;
+  box-shadow: 0 0 18px rgba(148, 163, 184, 0.4);
+  color: #23303f !important;
+}
+
+.position--bronze {
+  background: linear-gradient(160deg, #f0c6a0, #b3701f 55%, #7a4a10) !important;
+  box-shadow: 0 0 18px rgba(179, 112, 31, 0.4);
+  color: #3a2200 !important;
+}

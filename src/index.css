@@ -1,0 +1,123 @@
+:root {
+  /* Champions palette — navy, royal, cyan, silver */
+  --navy-950: #020817;
+  --navy-900: #030f34;
+  --navy-800: #07194c;
+  --navy-700: #0b2668;
+  --royal: #1e5bff;
+  --cyan: #38e1ff;
+  --silver: #d7e8ff;
+
+  --accent: var(--royal);
+  --accent-soft: #dbe9ff;
+  --bg: #030f34;
+  --border: rgba(142, 202, 255, 0.18);
+  --muted: rgba(219, 234, 254, 0.68);
+  --shadow: 0 22px 60px rgba(0, 6, 26, 0.4);
+  --surface: rgba(7, 25, 76, 0.9);
+  --text: #eaf4ff;
+  --text-h: #ffffff;
+
+  --sans: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --display: 'Oswald', 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+  /* Rotating chrome/steel ring used on focus, active and confirm surfaces */
+  --interactive-border: conic-gradient(
+    from var(--card-border-angle),
+    #0a1a4f,
+    #1e5bff,
+    #38e1ff,
+    #eaf4ff,
+    #38e1ff,
+    #1e5bff,
+    #0a1a4f
+  );
+
+  color: var(--text);
+  background: var(--bg);
+  font: 16px/1.5 var(--sans);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@property --card-border-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes card-border-flow {
+  to {
+    --card-border-angle: 360deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+button,
+input,
+select {
+  letter-spacing: 0;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 3px solid rgba(56, 225, 255, 0.4);
+  outline-offset: 2px;
+}
+
+input::placeholder {
+  color: rgba(219, 234, 254, 0.32);
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1,
+h2,
+h3 {
+  color: var(--text-h);
+  font-family: var(--display);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+h1 {
+  font-size: clamp(2rem, 5vw, 3.8rem);
+  line-height: 1;
+}
+
+h2 {
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  line-height: 1.12;
+}
+
+p {
+  margin-bottom: 0;
+}
+
+#root {
+  min-height: 100svh;
+}

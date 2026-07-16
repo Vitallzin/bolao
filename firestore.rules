@@ -1,0 +1,159 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userProfile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && userProfile().data.role == "admin";
+    }
+
+    function isApprovedPlayer() {
+      return signedIn()
+        && request.auth.token.email_verified == true
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && (userProfile().data.approved == true || userProfile().data.role == "admin");
+    }
+
+    function isOwner(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function beforePredictionDeadline(competitionId, matchId) {
+      let matchData = get(/databases/$(database)/documents/competitions/$(competitionId)/matches/$(matchId));
+      let roundData = get(/databases/$(database)/documents/competitions/$(competitionId)/rounds/$(matchData.data.roundId));
+      return roundData.data.status == "published"
+        && request.time < roundData.data.deadline;
+    }
+
+    function beforeKnockoutPredictionDeadline(competitionId, tieId, leg) {
+      let tieData = get(/databases/$(database)/documents/competitions/$(competitionId)/knockout/$(tieId));
+      return leg == "home"
+        ? request.time < tieData.data.homeLegDeadline
+        : request.time < tieData.data.awayLegDeadline;
+    }
+
+    function beforeCompetitionPredictionDeadline(competitionId) {
+      let firstRound = get(/databases/$(database)/documents/competitions/$(competitionId)/rounds/round-1);
+      return request.time < firstRound.data.deadline;
+    }
+
+    match /users/{userId} {
+      allow read: if signedIn();
+
+      allow create: if isOwner(userId)
+        && request.resource.data.role == "user"
+        && request.resource.data.approved == false;
+
+      allow update: if isAdmin()
+        || (
+          isOwner(userId)
+          && request.resource.data.role == resource.data.role
+          && request.resource.data.approved == resource.data.approved
+        );
+
+      allow delete: if isAdmin();
+    }
+
+    match /competitions/{competitionId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isAdmin();
+
+      match /teams/{teamId} {
+        allow read: if signedIn();
+        allow write: if isAdmin();
+      }
+
+      match /playerStats/{playerStatId} {
+        allow read: if signedIn();
+        allow write: if isAdmin();
+      }
+
+      match /rounds/{roundId} {
+        allow read: if signedIn();
+        allow write: if isAdmin();
+      }
+
+      match /matches/{matchId} {
+        allow read: if signedIn();
+        allow write: if isAdmin();
+      }
+
+      match /predictions/{predictionId} {
+        allow read: if signedIn();
+
+        allow create: if isApprovedPlayer()
+          && request.resource.data.userId == request.auth.uid
+          && beforePredictionDeadline(competitionId, request.resource.data.matchId);
+
+        allow update: if isApprovedPlayer()
+          && resource.data.userId == request.auth.uid
+          && request.resource.data.userId == resource.data.userId
+          && request.resource.data.matchId == resource.data.matchId
+          && beforePredictionDeadline(competitionId, resource.data.matchId);
+
+        allow delete: if isAdmin();
+      }
+
+      match /knockoutPredictions/{predictionId} {
+        allow read: if signedIn();
+
+        allow create: if isApprovedPlayer()
+          && request.resource.data.userId == request.auth.uid
+          && beforeKnockoutPredictionDeadline(
+            competitionId,
+            request.resource.data.tieId,
+            request.resource.data.leg
+          );
+
+        allow update: if isApprovedPlayer()
+          && resource.data.userId == request.auth.uid
+          && request.resource.data.userId == resource.data.userId
+          && request.resource.data.tieId == resource.data.tieId
+          && request.resource.data.leg == resource.data.leg
+          && beforeKnockoutPredictionDeadline(
+            competitionId,
+            resource.data.tieId,
+            resource.data.leg
+          );
+
+        allow delete: if isAdmin();
+      }
+
+      match /competitionPredictions/{predictionId} {
+        allow read: if signedIn();
+
+        allow create: if isApprovedPlayer()
+          && predictionId == request.auth.uid
+          && request.resource.data.userId == request.auth.uid
+          && beforeCompetitionPredictionDeadline(competitionId);
+
+        allow update: if false;
+        allow delete: if isAdmin();
+      }
+
+      match /competitionPredictionResults/{resultId} {
+        allow read: if signedIn();
+        allow write: if isAdmin();
+      }
+
+      match /scores/{scoreId} {
+        allow read: if signedIn();
+        allow write: if isAdmin();
+      }
+
+      match /knockout/{tieId} {
+        allow read: if signedIn();
+        allow write: if isAdmin();
+      }
+    }
+  }
+}

@@ -1,0 +1,73 @@
+.player-rankings-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.player-ranking-card {
+  background: linear-gradient(180deg, rgba(7, 25, 76, 0.96), rgba(3, 15, 52, 0.96));
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.22);
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+}
+
+.player-ranking-card h3 {
+  color: var(--app-title);
+  margin: 0;
+  text-align: center;
+}
+
+.player-ranking-list {
+  display: grid;
+  gap: 8px;
+}
+
+.player-ranking-row {
+  align-items: center;
+  background: rgba(226, 242, 255, 0.07);
+  border: 1px solid rgba(186, 230, 253, 0.12);
+  border-radius: 9px;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 24px 24px minmax(0, 1fr) 36px;
+  padding: 8px;
+}
+
+.player-ranking-row > strong,
+.player-ranking-row b {
+  color: var(--app-title);
+  text-align: center;
+}
+
+.player-ranking-row img {
+  border-radius: 999px;
+}
+
+.player-ranking-row div {
+  display: grid;
+  min-width: 0;
+}
+
+.player-ranking-row span {
+  color: var(--app-title);
+  font-weight: 850;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-ranking-row small {
+  color: var(--app-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 1000px) {
+  .player-rankings-grid {
+    grid-template-columns: 1fr;
+  }
+}
