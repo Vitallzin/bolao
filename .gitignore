@@ -20,6 +20,7 @@ scripts/notify/.env
 .vscode/*
 !.vscode/extensions.json
 .idea
+.claude
 .DS_Store
 *.suo
 *.ntvs*

@@ -4,7 +4,7 @@ import { Resend } from 'resend'
 
 const COMPETITION_ID = process.env.COMPETITION_ID || 'champions-2026'
 const SITE_URL = process.env.SITE_URL || 'https://example.com'
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Bolao da Champions <onboarding@resend.dev>'
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Bolão da Champions <onboarding@resend.dev>'
 const TIMEZONE = 'America/Sao_Paulo'
 const PREFERRED_HOUR_TOLERANCE_MINUTES = 40
 
@@ -248,33 +248,50 @@ async function sendEmail(user, { html, subject }) {
 }
 
 function renderRoundPublishedEmail(user, round) {
-  return `
-    <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-      <h2>Novos jogos no ar!</h2>
-      <p>Oi, ${escapeHtml(user.name || 'jogador')}!</p>
-      <p>A <strong>${escapeHtml(round.name || 'rodada')}</strong> foi publicada no Bolao da Champions.
-      Entre no site e envie seus palpites antes do prazo.</p>
-      <p>
-        <a href="${SITE_URL}" style="display:inline-block;padding:10px 18px;background:#1e5bff;color:#fff;text-decoration:none;border-radius:8px;">
-          Fazer meus palpites
-        </a>
+  return renderEmailShell({
+    body: `
+      <p style="font-size:14px;color:#dbeafe;margin:0 0 10px;">Oi, ${escapeHtml(user.name || 'jogador')}!</p>
+      <p style="font-size:14px;color:#dbeafe;margin:0 0 18px;line-height:1.6;">
+        A <strong style="color:#ffffff;">${escapeHtml(round.name || 'rodada')}</strong> foi publicada no Bolão da
+        Champions. Entre no site e envie seus palpites antes do prazo.
       </p>
-    </div>
-  `
+    `,
+    buttonLabel: 'Fazer meus palpites',
+    title: 'Novos jogos no ar!',
+  })
 }
 
 function renderDeadlineReminderEmail(user, label, deadline) {
-  return `
-    <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-      <h2>Falta pouco!</h2>
-      <p>Oi, ${escapeHtml(user.name || 'jogador')}!</p>
-      <p>O prazo de <strong>${escapeHtml(label)}</strong> fecha em <strong>${formatDateTime(deadline)}</strong>
-      e voce ainda nao enviou todos os seus palpites.</p>
-      <p>
-        <a href="${SITE_URL}" style="display:inline-block;padding:10px 18px;background:#1e5bff;color:#fff;text-decoration:none;border-radius:8px;">
-          Enviar palpites agora
-        </a>
+  return renderEmailShell({
+    body: `
+      <p style="font-size:14px;color:#dbeafe;margin:0 0 10px;">Oi, ${escapeHtml(user.name || 'jogador')}!</p>
+      <p style="font-size:14px;color:#dbeafe;margin:0 0 18px;line-height:1.6;">
+        O prazo de <strong style="color:#ffffff;">${escapeHtml(label)}</strong> fecha em
+        <strong style="color:#ffffff;">${formatDateTime(deadline)}</strong> e você ainda não enviou todos os
+        seus palpites.
       </p>
+    `,
+    buttonLabel: 'Enviar palpites agora',
+    title: 'Falta pouco!',
+  })
+}
+
+function renderEmailShell({ body, buttonLabel, title }) {
+  return `
+    <div style="background-color:#020a2a;padding:32px 16px;">
+      <div style="background-color:#020a2a;background-image:linear-gradient(160deg,#020a2a,#001a5c);border-radius:14px;padding:28px;max-width:420px;margin:0 auto;font-family:Arial,Helvetica,sans-serif;">
+        <p style="font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#7dd3fc;margin:0 0 8px;">
+          Bolão da Champions
+        </p>
+        <h2 style="font-size:20px;margin:0 0 16px;color:#ffffff;">${escapeHtml(title)}</h2>
+        ${body}
+        <a
+          href="${SITE_URL}"
+          style="display:inline-block;padding:12px 20px;background-color:#38e1ff;color:#001e67;font-weight:bold;text-decoration:none;border-radius:8px;font-size:14px;"
+        >
+          ${escapeHtml(buttonLabel)}
+        </a>
+      </div>
     </div>
   `
 }
