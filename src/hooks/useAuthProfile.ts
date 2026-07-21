@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { FirebaseError } from 'firebase/app'
 import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
-  sendEmailVerification,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
+  updateProfile,
   type User,
 } from 'firebase/auth'
 import { doc, getDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'
@@ -21,6 +22,7 @@ export function useAuthProfile() {
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
   const [messageId, setMessageId] = useState(0)
+  const pendingSignUpNameRef = useRef<string | null>(null)
 
   function showMessage(nextMessage: string) {
     setMessage(nextMessage)
@@ -40,8 +42,11 @@ export function useAuthProfile() {
         return
       }
 
+      const pendingSignUpName = pendingSignUpNameRef.current
+      pendingSignUpNameRef.current = null
+
       try {
-        const profile = await ensureUserProfile(user)
+        const profile = await ensureUserProfile(user, pendingSignUpName)
         setCurrentUser(profile)
       } catch (error) {
         await signOut(auth)
@@ -73,14 +78,23 @@ export function useAuthProfile() {
     }
   }
 
-  async function handleEmailSignUp(email: string, password: string) {
+  async function handleEmailSignUp(name: string, email: string, password: string) {
     showMessage('')
+
+    const trimmedName = name.trim()
+    pendingSignUpNameRef.current = trimmedName || null
 
     try {
       const credential = await createUserWithEmailAndPassword(auth, email, password)
-      await sendEmailVerification(credential.user)
+
+      if (trimmedName) {
+        await updateProfile(credential.user, { displayName: trimmedName })
+      }
+
+      await requestVerificationEmail(credential.user)
     } catch (error) {
-      showMessage(getFirebaseMessage(error))
+      pendingSignUpNameRef.current = null
+      showMessage(getAuthFlowMessage(error))
     }
   }
 
@@ -92,10 +106,10 @@ export function useAuthProfile() {
     showMessage('')
 
     try {
-      await sendEmailVerification(auth.currentUser)
+      await requestVerificationEmail(auth.currentUser)
       showMessage('Email de confirmacao reenviado.')
     } catch (error) {
-      showMessage(getFirebaseMessage(error))
+      showMessage(getAuthFlowMessage(error))
     }
   }
 
@@ -169,7 +183,7 @@ export function useAuthProfile() {
   }
 }
 
-async function ensureUserProfile(user: User): Promise<Player> {
+async function ensureUserProfile(user: User, pendingSignUpName: string | null): Promise<Player> {
   const userRef = doc(db, 'users', user.uid)
   const snapshot = await getDoc(userRef)
 
@@ -221,7 +235,7 @@ async function ensureUserProfile(user: User): Promise<Player> {
 
   const profile = {
     id: user.uid,
-    name: user.displayName ?? 'Jogador',
+    name: pendingSignUpName || user.displayName || 'Jogador',
     email: user.email ?? '',
     photoURL: user.photoURL ?? null,
     role: 'user',
@@ -241,4 +255,24 @@ async function ensureUserProfile(user: User): Promise<Player> {
   })
 
   return profile
+}
+
+async function requestVerificationEmail(user: User) {
+  const idToken = await user.getIdToken()
+  const response = await fetch('/api/send-verification-email', {
+    headers: { Authorization: `Bearer ${idToken}` },
+    method: 'POST',
+  })
+
+  if (!response.ok) {
+    throw new Error('Nao consegui enviar o email de confirmacao. Tente de novo em alguns segundos.')
+  }
+}
+
+function getAuthFlowMessage(error: unknown) {
+  if (error instanceof FirebaseError) {
+    return getFirebaseMessage(error)
+  }
+
+  return error instanceof Error ? error.message : getFirebaseMessage(error)
 }

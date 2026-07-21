@@ -1,10 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
+import { deleteUser } from 'firebase/auth'
+import { doc, writeBatch } from 'firebase/firestore'
 import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage, VerifyEmailPage } from './pages/LoginPage'
+import { competitionId } from './constants'
+import { db } from './firebase'
 import { useAuthProfile } from './hooks/useAuthProfile'
 import { useCompetitionActions } from './hooks/useCompetitionActions'
 import { useCompetitionData } from './hooks/useCompetitionData'
 import type { KnockoutTie, View } from './types'
+import { getFirebaseMessage } from './utils/firebaseErrors'
 import {
   buildStandings,
   calculateCompetitionPredictionPoints,
@@ -141,6 +146,42 @@ function App() {
     setActiveView('palpites')
   }
 
+  async function deleteAccount() {
+    if (!authUser || !currentUser) {
+      return
+    }
+
+    try {
+      const batch = writeBatch(db)
+
+      predictions
+        .filter((prediction) => prediction.userId === currentUser.id)
+        .forEach((prediction) => {
+          batch.delete(doc(db, 'competitions', competitionId, 'predictions', prediction.id))
+        })
+
+      knockoutPredictions
+        .filter((prediction) => prediction.userId === currentUser.id)
+        .forEach((prediction) => {
+          batch.delete(doc(db, 'competitions', competitionId, 'knockoutPredictions', prediction.id))
+        })
+
+      competitionPredictions
+        .filter((prediction) => prediction.userId === currentUser.id)
+        .forEach((prediction) => {
+          batch.delete(doc(db, 'competitions', competitionId, 'competitionPredictions', prediction.id))
+        })
+
+      batch.delete(doc(db, 'users', currentUser.id))
+
+      await batch.commit()
+      await deleteUser(authUser)
+    } catch (error) {
+      setMessage(getFirebaseMessage(error))
+      throw error
+    }
+  }
+
   function changeView(view: View) {
     setActiveView(view)
     setAdminMode(false)
@@ -211,6 +252,7 @@ function App() {
       onAddPlayerStat={actions.addPlayerStat}
       onAddTeam={actions.addTeam}
       onApproveUser={actions.approveUser}
+      onDeleteAccount={deleteAccount}
       onDeleteKnockoutTie={actions.deleteKnockoutTie}
       onDeletePlayerStat={actions.deletePlayerStat}
       onDeleteTeam={actions.deleteTeam}

@@ -60,7 +60,7 @@ service cloud.firestore {
           && request.resource.data.approved == resource.data.approved
         );
 
-      allow delete: if isAdmin();
+      allow delete: if isAdmin() || isOwner(userId);
     }
 
     match /competitions/{competitionId} {
@@ -100,7 +100,7 @@ service cloud.firestore {
           && request.resource.data.matchId == resource.data.matchId
           && beforePredictionDeadline(competitionId, resource.data.matchId);
 
-        allow delete: if isAdmin();
+        allow delete: if isAdmin() || resource.data.userId == request.auth.uid;
       }
 
       match /knockoutPredictions/{predictionId} {
@@ -125,7 +125,7 @@ service cloud.firestore {
             resource.data.leg
           );
 
-        allow delete: if isAdmin();
+        allow delete: if isAdmin() || resource.data.userId == request.auth.uid;
       }
 
       match /competitionPredictions/{predictionId} {
@@ -137,7 +137,7 @@ service cloud.firestore {
           && beforeCompetitionPredictionDeadline(competitionId);
 
         allow update: if false;
-        allow delete: if isAdmin();
+        allow delete: if isAdmin() || resource.data.userId == request.auth.uid;
       }
 
       match /competitionPredictionResults/{resultId} {

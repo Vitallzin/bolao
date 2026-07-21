@@ -418,6 +418,36 @@
   padding: 10px 16px;
 }
 
+.account-danger-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.account-danger-zone {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px dashed rgba(239, 68, 68, 0.4);
+  border-radius: 14px;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.account-danger-zone h3 {
+  color: #fca5a5;
+  font-size: 1rem;
+}
+
+.account-danger-zone p {
+  color: var(--account-muted);
+  font-size: 0.88rem;
+}
+
+.account-modal-error {
+  color: #fca5a5;
+  font-weight: 750;
+  margin: 0;
+}
+
 @media (max-width: 900px) {
   .topbar {
     align-items: flex-start;

@@ -7,7 +7,7 @@ type AuthMode = 'signin' | 'signup'
 type LoginPageProps = {
   message: string
   onEmailLogin: (email: string, password: string) => void
-  onEmailSignUp: (email: string, password: string) => void
+  onEmailSignUp: (name: string, email: string, password: string) => void
   onGoogleLogin: () => void
 }
 
@@ -145,7 +145,8 @@ function SignInForm({ onSubmit }: { onSubmit: (email: string, password: string) 
   )
 }
 
-function SignUpForm({ onSubmit }: { onSubmit: (email: string, password: string) => void }) {
+function SignUpForm({ onSubmit }: { onSubmit: (name: string, email: string, password: string) => void }) {
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -160,11 +161,21 @@ function SignUpForm({ onSubmit }: { onSubmit: (email: string, password: string) 
     }
 
     setValidationError('')
-    onSubmit(email.trim(), password)
+    onSubmit(name.trim(), email.trim(), password)
   }
 
   return (
     <form className="auth-form" onSubmit={handleSubmit}>
+      <label>
+        Apelido
+        <input
+          autoComplete="nickname"
+          required
+          type="text"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+        />
+      </label>
       <label>
         Email
         <input

@@ -9,6 +9,7 @@ type AppHeaderProps = {
   authProvider: 'google' | 'password'
   currentUser: Player
   isAdmin: boolean
+  onDeleteAccount: () => Promise<void>
   onLogout: () => void
   onNotificationPreferencesUpdate: (preferences: NotificationPreferences) => Promise<void>
   onProfileNameUpdate: (name: string) => Promise<void>
@@ -20,6 +21,7 @@ export function AppHeader({
   authProvider,
   currentUser,
   isAdmin,
+  onDeleteAccount,
   onLogout,
   onNotificationPreferencesUpdate,
   onProfileNameUpdate,
@@ -134,6 +136,7 @@ export function AppHeader({
           authProvider={authProvider}
           user={currentUser}
           onClose={() => setSettingsOpen(false)}
+          onDeleteAccount={onDeleteAccount}
           onNotificationPreferencesUpdate={onNotificationPreferencesUpdate}
           onProfileNameUpdate={onProfileNameUpdate}
         />,
@@ -224,18 +227,21 @@ function UserAvatar({ user }: { user: Player }) {
 function AccountSettingsModal({
   authProvider,
   onClose,
+  onDeleteAccount,
   onNotificationPreferencesUpdate,
   onProfileNameUpdate,
   user,
 }: {
   authProvider: 'google' | 'password'
   onClose: () => void
+  onDeleteAccount: () => Promise<void>
   onNotificationPreferencesUpdate: (preferences: NotificationPreferences) => Promise<void>
   onProfileNameUpdate: (name: string) => Promise<void>
   user: Player
 }) {
   const [name, setName] = useState(user.name)
   const [saving, setSaving] = useState(false)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
 
   async function saveName(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -297,6 +303,74 @@ function AccountSettingsModal({
           }}
           onSave={onNotificationPreferencesUpdate}
         />
+
+        <section className="account-danger-zone">
+          <div>
+            <h3>Zona de perigo</h3>
+            <p>Excluir sua conta remove seu perfil e todos os seus palpites. Nao da pra desfazer.</p>
+          </div>
+          <button className="account-danger-button" type="button" onClick={() => setDeleteConfirmOpen(true)}>
+            Excluir conta
+          </button>
+        </section>
+      </section>
+
+      {deleteConfirmOpen ? createPortal(
+        <DeleteAccountConfirmModal
+          onCancel={() => setDeleteConfirmOpen(false)}
+          onConfirm={onDeleteAccount}
+        />,
+        document.body,
+      ) : null}
+    </div>
+  )
+}
+
+function DeleteAccountConfirmModal({
+  onCancel,
+  onConfirm,
+}: {
+  onCancel: () => void
+  onConfirm: () => Promise<void>
+}) {
+  const [deleting, setDeleting] = useState(false)
+  const [error, setError] = useState('')
+
+  async function handleConfirm() {
+    setDeleting(true)
+    setError('')
+
+    try {
+      await onConfirm()
+    } catch {
+      setError('Nao foi possivel excluir a conta agora. Saia, entre de novo e tente outra vez.')
+      setDeleting(false)
+    }
+  }
+
+  return (
+    <div className="account-modal-overlay" role="presentation">
+      <section
+        className="account-modal account-modal--confirm"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-account-title"
+      >
+        <span className="eyebrow">Excluir conta</span>
+        <h2 id="delete-account-title">Tem certeza?</h2>
+        <p>
+          Isso apaga seu perfil e todos os seus palpites para sempre — nao da pra desfazer. Se der erro
+          de sessao, saia e entre de novo antes de tentar.
+        </p>
+        {error ? <p className="account-modal-error">{error}</p> : null}
+        <div className="account-confirm-actions">
+          <Button disabled={deleting} onClick={onCancel} variant="ghost">
+            Cancelar
+          </Button>
+          <button className="account-danger-button" disabled={deleting} type="button" onClick={handleConfirm}>
+            {deleting ? 'Excluindo...' : 'Sim, excluir conta'}
+          </button>
+        </div>
       </section>
     </div>
   )

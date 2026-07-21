@@ -21,6 +21,7 @@ export function getFirebaseMessage(error: unknown) {
     'auth/user-not-found': 'Nao encontramos uma conta com esse email.',
     'auth/invalid-credential': 'Email ou senha incorretos.',
     'auth/too-many-requests': 'Muitas tentativas seguidas. Aguarde um pouco e tente de novo.',
+    'auth/requires-recent-login': 'Por seguranca, saia e entre de novo antes de excluir a conta.',
     'permission-denied':
       'O login funcionou, mas o Firestore bloqueou o perfil. Confira se as regras foram publicadas e se o banco foi criado.',
   }
