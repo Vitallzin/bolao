@@ -272,8 +272,8 @@ export function DashboardPage({
 function PendingApprovalNotice() {
   return (
     <EmptyState
-      title="Aguardando aprovacao"
-      text="O admin ainda precisa liberar seu acesso para enviar palpites. Assim que voce for aprovado, essa tela libera na hora."
+      title="Voce esta como visitante"
+      text="Visitante so consegue ver o site. Peca para o admin te liberar como jogador para enviar palpites e aparecer no ranking."
     />
   )
 }

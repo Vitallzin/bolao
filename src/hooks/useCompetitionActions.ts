@@ -285,7 +285,7 @@ export function useCompetitionActions({
 
   async function approveUser(userId: string, approved: boolean) {
     await updateDoc(doc(db, 'users', userId), { approved })
-    setMessage(approved ? 'Jogador aprovado.' : 'Aprovacao do jogador revogada.')
+    setMessage(approved ? 'Agora e jogador.' : 'Agora e visitante.')
   }
 
   async function addPlayerStat(event: FormEvent<HTMLFormElement>) {

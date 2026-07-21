@@ -16,8 +16,18 @@
   border-radius: 10px;
   display: grid;
   gap: 12px;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto;
   padding: 12px;
+}
+
+.player-role-toggle.leg-toggle {
+  justify-self: end;
+  margin: 0;
+}
+
+.player-role-toggle.leg-toggle button {
+  min-height: 34px;
+  padding: 6px 14px;
 }
 
 .player-approval-row > div {
@@ -40,14 +50,13 @@
   white-space: nowrap;
 }
 
-.player-approval-row__actions {
-  display: flex;
-  gap: 8px;
-}
-
 @media (max-width: 620px) {
   .player-approval-row {
     grid-template-columns: 1fr;
     justify-items: start;
+  }
+
+  .player-role-toggle.leg-toggle {
+    justify-self: start;
   }
 }
