@@ -196,6 +196,21 @@
   color: #ffffff;
 }
 
+.login-card .button--ghost {
+  background: #eef6ff;
+  border: 1px solid #bfdbfe;
+  color: #001e67;
+}
+
+.login-card .button--ghost:hover,
+.login-card .button--ghost:active {
+  background:
+    linear-gradient(180deg, #ffffff, #dbeafe) padding-box,
+    var(--interactive-border) border-box;
+  border-color: transparent;
+  color: #001e67;
+}
+
 .auth-form {
   display: grid;
   gap: 12px;
