@@ -1,10 +1,12 @@
 import { cert, getApps, initializeApp } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
-import { Resend } from 'resend'
+import nodemailer from 'nodemailer'
 
 const COMPETITION_ID = process.env.COMPETITION_ID || 'champions-2026'
 const SITE_URL = process.env.SITE_URL || 'https://example.com'
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Bolão da Champions <onboarding@resend.dev>'
+const GMAIL_USER = requireEnv('GMAIL_USER')
+const GMAIL_APP_PASSWORD = requireEnv('GMAIL_APP_PASSWORD')
+const FROM_EMAIL = `Bolão da Champions <${GMAIL_USER}>`
 const TIMEZONE = 'America/Sao_Paulo'
 const PREFERRED_HOUR_TOLERANCE_MINUTES = 40
 
@@ -17,7 +19,13 @@ const stageLabels = {
 }
 
 const serviceAccount = JSON.parse(requireEnv('FIREBASE_SERVICE_ACCOUNT'))
-const resend = new Resend(requireEnv('RESEND_API_KEY'))
+const transporter = nodemailer.createTransport({
+  auth: {
+    pass: GMAIL_APP_PASSWORD,
+    user: GMAIL_USER,
+  },
+  service: 'gmail',
+})
 
 if (getApps().length === 0) {
   initializeApp({ credential: cert(serviceAccount) })
@@ -233,7 +241,7 @@ function formatDateTime(date) {
 
 async function sendEmail(user, { html, subject }) {
   try {
-    await resend.emails.send({
+    await transporter.sendMail({
       from: FROM_EMAIL,
       html,
       subject,

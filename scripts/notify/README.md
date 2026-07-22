@@ -26,14 +26,20 @@ por isso nao precisou mudar nada nas regras para o script funcionar.
 
 **Nunca** commite esse arquivo `.json` no repositorio.
 
-### 2. Conta no Resend (envio de email)
+### 2. Conta do Gmail dedicada (envio de email)
 
-1. Crie uma conta gratuita em [resend.com](https://resend.com) (100 emails/dia gratis).
-2. Pegue a API key em API Keys > Create API Key.
-3. No GitHub, crie o secret `RESEND_API_KEY` com essa chave.
-4. (Opcional) Se voce verificar um dominio proprio no Resend, crie o secret `RESEND_FROM_EMAIL`, ex:
-   `Bolao da Champions <bolao@seudominio.com>`. Sem isso, usa o dominio de teste do Resend
-   (`onboarding@resend.dev` — funciona, mas tem limite de envio menor e mais chance de cair em spam).
+Use uma conta Google separada, so para o bolao (nao a sua pessoal).
+
+1. Ative a **verificacao em duas etapas** nessa conta: myaccount.google.com/security > "Verificacao em
+   duas etapas".
+2. Depois de ativar, va em myaccount.google.com/apppasswords > crie uma senha de app (nome sugerido:
+   "Bolao notificacoes"). Vai gerar uma senha de 16 caracteres — copie sem os espacos.
+3. No GitHub, crie dois secrets:
+   - `GMAIL_USER`: o email dessa conta (ex: `bolaodachampions@gmail.com`)
+   - `GMAIL_APP_PASSWORD`: a senha de 16 caracteres gerada no passo 2 (**nao** a senha normal da conta —
+     essa senha normal nao funciona para envio automatizado)
+
+O Gmail tem limite de ~500 emails/dia por conta, bem acima do que um bolao de amigos precisa.
 
 ### 3. Link do site
 
@@ -50,7 +56,7 @@ nao precisa esperar a proxima hora cheia.
 ```bash
 cd scripts/notify
 npm install
-FIREBASE_SERVICE_ACCOUNT='{"...": "..."}' RESEND_API_KEY=re_xxx SITE_URL=https://seubolao.vercel.app npm run notify
+FIREBASE_SERVICE_ACCOUNT='{"...": "..."}' GMAIL_USER=bolao@gmail.com GMAIL_APP_PASSWORD=xxxxxxxxxxxxxxxx SITE_URL=https://seubolao.vercel.app npm run notify
 ```
 
 ## Como evita mandar o mesmo aviso duas vezes

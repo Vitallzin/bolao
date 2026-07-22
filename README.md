@@ -73,15 +73,16 @@ scripts/notify/    script standalone que envia as notificações por e-mail (rod
 ## Notificações por e-mail
 
 As notificações de rodada/prazo não usam Cloud Functions — rodam como um script Node separado,
-agendado por hora através do GitHub Actions, usando o Admin SDK do Firebase e a API do
-[Resend](https://resend.com). Configuração completa em [`scripts/notify/README.md`](scripts/notify/README.md).
+agendado por hora através do GitHub Actions, usando o Admin SDK do Firebase e o Nodemailer (via uma
+conta do Gmail dedicada ao projeto). Configuração completa em
+[`scripts/notify/README.md`](scripts/notify/README.md).
 
 ## E-mail de confirmação de conta
 
 O e-mail enviado para confirmar o endereço de quem cria conta com e-mail/senha também não usa o
 template padrão do Firebase (genérico, em inglês e com chance maior de cair em spam) — é gerado pela
 função serverless [`api/send-verification-email.ts`](api/send-verification-email.ts), que roda no
-próprio Vercel, e enviado com a mesma identidade visual e o mesmo remetente do Resend usado nas
+próprio Vercel, e enviado com a mesma identidade visual e o mesmo remetente (Gmail) usado nas
 notificações.
 
 No painel do Vercel (**Settings → Environment Variables**), além das variáveis `VITE_FIREBASE_*`,
@@ -89,7 +90,7 @@ adicione (sem o prefixo `VITE_`, para não irem para o código do navegador):
 
 ```
 FIREBASE_SERVICE_ACCOUNT=   (o mesmo JSON da conta de serviço usado no GitHub Actions)
-RESEND_API_KEY=             (a mesma chave do Resend)
-RESEND_FROM_EMAIL=          (opcional, remetente verificado no Resend)
+GMAIL_USER=                 (o email da conta Gmail dedicada ao projeto)
+GMAIL_APP_PASSWORD=         (a senha de app de 16 caracteres, nao a senha normal da conta)
 SITE_URL=                   (a URL do site publicado)
 ```

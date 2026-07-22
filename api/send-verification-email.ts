@@ -1,17 +1,24 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { cert, getApps, initializeApp } from 'firebase-admin/app'
 import { getAuth } from 'firebase-admin/auth'
-import { Resend } from 'resend'
+import nodemailer from 'nodemailer'
 
 const SITE_URL = process.env.SITE_URL || 'https://example.com'
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Bolão da Champions <onboarding@resend.dev>'
+const GMAIL_USER = process.env.GMAIL_USER || ''
+const FROM_EMAIL = `Bolão da Champions <${GMAIL_USER}>`
 
 if (getApps().length === 0) {
   const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}')
   initializeApp({ credential: cert(serviceAccount) })
 }
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const transporter = nodemailer.createTransport({
+  auth: {
+    pass: process.env.GMAIL_APP_PASSWORD,
+    user: GMAIL_USER,
+  },
+  service: 'gmail',
+})
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -45,7 +52,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       url: SITE_URL,
     })
 
-    await resend.emails.send({
+    await transporter.sendMail({
       from: FROM_EMAIL,
       html: renderVerificationEmail(decoded.name || decoded.email, link),
       subject: 'Confirme seu email — Bolão da Champions',
