@@ -33,6 +33,31 @@ if (getApps().length === 0) {
 
 const db = getFirestore()
 
+let failureCount = 0
+
+async function runSafely(label, task) {
+  try {
+    await task()
+  } catch (error) {
+    failureCount += 1
+    console.error(`[falha] ${label}: ${error?.message || error}`)
+  }
+}
+
+async function withRetry(task, attempts = 3) {
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await task()
+    } catch (error) {
+      if (attempt === attempts) {
+        throw error
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, attempt * 500))
+    }
+  }
+}
+
 async function main() {
   const now = new Date()
 
@@ -80,19 +105,23 @@ async function main() {
     }
 
     for (const user of notifiableUsers) {
-      await notifyRoundPublished(user, round, now)
+      await runSafely(`rodada publicada (${round.id}) para ${user.email}`, () =>
+        notifyRoundPublished(user, round, now),
+      )
 
       const hasPredictedAll = roundMatches.every((match) =>
         predictions.some((prediction) => prediction.userId === user.id && prediction.matchId === match.id),
       )
 
-      await notifyDeadlineReminder(user, {
-        deadline,
-        hasPredicted: hasPredictedAll,
-        key: `round-${round.id}`,
-        label: round.name || `Rodada ${round.number ?? ''}`,
-        now,
-      })
+      await runSafely(`lembrete de prazo (${round.id}) para ${user.email}`, () =>
+        notifyDeadlineReminder(user, {
+          deadline,
+          hasPredicted: hasPredictedAll,
+          key: `round-${round.id}`,
+          label: round.name || `Rodada ${round.number ?? ''}`,
+          now,
+        }),
+      )
     }
   }
 
@@ -128,13 +157,15 @@ async function main() {
           ),
         )
 
-        await notifyDeadlineReminder(user, {
-          deadline,
-          hasPredicted: hasPredictedAll,
-          key: `knockout-${stage}-${leg}`,
-          label,
-          now,
-        })
+        await runSafely(`lembrete de mata-mata (${stage}/${leg}) para ${user.email}`, () =>
+          notifyDeadlineReminder(user, {
+            deadline,
+            hasPredicted: hasPredictedAll,
+            key: `knockout-${stage}-${leg}`,
+            label,
+            now,
+          }),
+        )
       }
     }
   }
@@ -158,10 +189,12 @@ async function notifyRoundPublished(user, round, now) {
     return
   }
 
-  await db
-    .collection('users')
-    .doc(user.id)
-    .update({ [`notifiedPublishedRounds.${round.id}`]: true })
+  await withRetry(() =>
+    db
+      .collection('users')
+      .doc(user.id)
+      .update({ [`notifiedPublishedRounds.${round.id}`]: true }),
+  )
 
   user.notifiedPublishedRounds = { ...(user.notifiedPublishedRounds || {}), [round.id]: true }
   void now
@@ -192,10 +225,12 @@ async function notifyDeadlineReminder(user, { deadline, hasPredicted, key, label
     return
   }
 
-  await db
-    .collection('users')
-    .doc(user.id)
-    .update({ [`notifiedDeadlineReminders.${key}`]: true })
+  await withRetry(() =>
+    db
+      .collection('users')
+      .doc(user.id)
+      .update({ [`notifiedDeadlineReminders.${key}`]: true }),
+  )
 
   user.notifiedDeadlineReminders = { ...(user.notifiedDeadlineReminders || {}), [key]: true }
 }
@@ -247,10 +282,11 @@ async function sendEmail(user, { html, subject }) {
       subject,
       to: user.email,
     })
-    console.log(`Sent "${subject}" to ${user.email}`)
+    console.log(`Enviado "${subject}" para ${user.email}`)
     return true
   } catch (error) {
-    console.error(`Failed to send "${subject}" to ${user.email}:`, error)
+    failureCount += 1
+    console.error(`[falha] envio de "${subject}" para ${user.email}: ${error?.message || error}`)
     return false
   }
 }
@@ -324,10 +360,15 @@ function requireEnv(name) {
 
 main()
   .then(() => {
-    console.log('Notification check finished.')
+    if (failureCount > 0) {
+      console.error(`Verificacao concluida com ${failureCount} falha(s) — veja as linhas "[falha]" acima.`)
+      process.exit(1)
+    }
+
+    console.log('Verificacao concluida sem erros.')
     process.exit(0)
   })
   .catch((error) => {
-    console.error('Notification check failed:', error)
+    console.error('Verificacao interrompida:', error)
     process.exit(1)
   })
