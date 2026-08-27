@@ -252,6 +252,7 @@ function App() {
       onAddPlayerStat={actions.addPlayerStat}
       onAddTeam={actions.addTeam}
       onApproveUser={actions.approveUser}
+      onDeletePlayer={actions.deletePlayer}
       onDeleteAccount={deleteAccount}
       onDeleteKnockoutTie={actions.deleteKnockoutTie}
       onDeletePlayerStat={actions.deletePlayerStat}

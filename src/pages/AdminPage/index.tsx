@@ -24,6 +24,7 @@ type AdminPageProps = {
   onAddPlayerStat: (event: FormEvent<HTMLFormElement>) => void
   onAddTeam: (event: FormEvent<HTMLFormElement>) => void
   onApproveUser: (userId: string, approved: boolean) => void
+  onDeletePlayer: (userId: string) => void
   onDeleteKnockoutTie: (tieId: string) => void
   onDeletePlayerStat: (playerStatId: string) => void
   onDeleteTeam: (teamId: string) => void
@@ -69,6 +70,7 @@ export function AdminPage({
   onAddPlayerStat,
   onAddTeam,
   onApproveUser,
+  onDeletePlayer,
   onDeleteKnockoutTie,
   onDeletePlayerStat,
   onDeleteTeam,
@@ -117,7 +119,7 @@ export function AdminPage({
       </nav>
 
       {activeSection === 'players' ? (
-        <PlayersPage players={players} onApproveUser={onApproveUser} />
+        <PlayersPage players={players} onApproveUser={onApproveUser} onDeletePlayer={onDeletePlayer} />
       ) : null}
 
       {activeSection === 'teams' ? (

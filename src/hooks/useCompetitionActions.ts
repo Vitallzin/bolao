@@ -288,6 +288,38 @@ export function useCompetitionActions({
     setMessage(approved ? 'Agora e jogador.' : 'Agora e visitante.')
   }
 
+  async function deletePlayer(userId: string) {
+    if (userId === currentUser?.id) {
+      setMessage('Voce nao pode remover a sua propria conta por aqui.')
+      return
+    }
+
+    const batch = writeBatch(db)
+
+    predictions
+      .filter((prediction) => prediction.userId === userId)
+      .forEach((prediction) => {
+        batch.delete(doc(db, 'competitions', competitionId, 'predictions', prediction.id))
+      })
+
+    knockoutPredictions
+      .filter((prediction) => prediction.userId === userId)
+      .forEach((prediction) => {
+        batch.delete(doc(db, 'competitions', competitionId, 'knockoutPredictions', prediction.id))
+      })
+
+    competitionPredictions
+      .filter((prediction) => prediction.userId === userId)
+      .forEach((prediction) => {
+        batch.delete(doc(db, 'competitions', competitionId, 'competitionPredictions', prediction.id))
+      })
+
+    batch.delete(doc(db, 'users', userId))
+
+    await batch.commit()
+    setMessage('Jogador removido do bolao.')
+  }
+
   async function addPlayerStat(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const data = new FormData(event.currentTarget)
@@ -830,6 +862,7 @@ export function useCompetitionActions({
     addKnockoutTie,
     addPlayerStat,
     approveUser,
+    deletePlayer,
     deleteKnockoutTie,
     addTeam,
     deleteTeam,

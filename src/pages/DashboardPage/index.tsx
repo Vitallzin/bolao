@@ -42,6 +42,7 @@ type DashboardPageProps = {
   onAddPlayerStat: FormEventHandler<HTMLFormElement>
   onAddTeam: FormEventHandler<HTMLFormElement>
   onApproveUser: (userId: string, approved: boolean) => void
+  onDeletePlayer: (userId: string) => void
   onDeleteAccount: () => Promise<void>
   onDeleteKnockoutTie: (tieId: string) => void
   onDeletePlayerStat: (playerStatId: string) => void
@@ -110,6 +111,7 @@ export function DashboardPage({
   onAddPlayerStat,
   onAddTeam,
   onApproveUser,
+  onDeletePlayer,
   onDeleteAccount,
   onDeleteKnockoutTie,
   onDeletePlayerStat,
@@ -198,6 +200,7 @@ export function DashboardPage({
           onAddPlayerStat={onAddPlayerStat}
           onAddTeam={onAddTeam}
           onApproveUser={onApproveUser}
+          onDeletePlayer={onDeletePlayer}
           onDeleteKnockoutTie={onDeleteKnockoutTie}
           onDeletePlayerStat={onDeletePlayerStat}
           onDeleteTeam={onDeleteTeam}

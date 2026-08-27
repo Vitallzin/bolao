@@ -5,6 +5,7 @@ import './PlayersPage.css'
 
 type PlayersPageProps = {
   onApproveUser: (userId: string, approved: boolean) => void
+  onDeletePlayer: (userId: string) => void
   players: Player[]
 }
 
@@ -13,8 +14,9 @@ type PendingRoleChange = {
   player: Player
 }
 
-export function PlayersPage({ onApproveUser, players }: PlayersPageProps) {
+export function PlayersPage({ onApproveUser, onDeletePlayer, players }: PlayersPageProps) {
   const [pendingChange, setPendingChange] = useState<PendingRoleChange | null>(null)
+  const [playerToRemove, setPlayerToRemove] = useState<Player | null>(null)
   const orderedPlayers = [...players].sort(
     (a, b) => Number(a.approved) - Number(b.approved) || a.name.localeCompare(b.name),
   )
@@ -52,26 +54,35 @@ export function PlayersPage({ onApproveUser, players }: PlayersPageProps) {
               {player.role === 'admin' ? (
                 <span className="status-pill">Admin</span>
               ) : (
-                <div className="leg-toggle player-role-toggle" role="tablist" aria-label="Jogador ou visitante">
+                <>
+                  <div className="leg-toggle player-role-toggle" role="tablist" aria-label="Jogador ou visitante">
+                    <button
+                      className={player.approved ? 'active' : ''}
+                      type="button"
+                      role="tab"
+                      aria-selected={player.approved}
+                      onClick={() => requestRoleChange(player, true)}
+                    >
+                      Jogador
+                    </button>
+                    <button
+                      className={!player.approved ? 'active' : ''}
+                      type="button"
+                      role="tab"
+                      aria-selected={!player.approved}
+                      onClick={() => requestRoleChange(player, false)}
+                    >
+                      Visitante
+                    </button>
+                  </div>
                   <button
-                    className={player.approved ? 'active' : ''}
+                    className="danger-button danger-button--compact"
                     type="button"
-                    role="tab"
-                    aria-selected={player.approved}
-                    onClick={() => requestRoleChange(player, true)}
+                    onClick={() => setPlayerToRemove(player)}
                   >
-                    Jogador
+                    Remover
                   </button>
-                  <button
-                    className={!player.approved ? 'active' : ''}
-                    type="button"
-                    role="tab"
-                    aria-selected={!player.approved}
-                    onClick={() => requestRoleChange(player, false)}
-                  >
-                    Visitante
-                  </button>
-                </div>
+                </>
               )}
             </article>
           ))}
@@ -89,7 +100,49 @@ export function PlayersPage({ onApproveUser, players }: PlayersPageProps) {
           }}
         />
       ) : null}
+
+      {playerToRemove ? (
+        <ConfirmRemovePlayerModal
+          player={playerToRemove}
+          onCancel={() => setPlayerToRemove(null)}
+          onConfirm={() => {
+            onDeletePlayer(playerToRemove.id)
+            setPlayerToRemove(null)
+          }}
+        />
+      ) : null}
     </section>
+  )
+}
+
+function ConfirmRemovePlayerModal({
+  onCancel,
+  onConfirm,
+  player,
+}: {
+  onCancel: () => void
+  onConfirm: () => void
+  player: Player
+}) {
+  return (
+    <div className="confirm-overlay" role="presentation">
+      <div className="confirm-card" role="dialog" aria-modal="true" aria-labelledby="remove-player-title">
+        <span className="eyebrow">Remover do bolao</span>
+        <h2 id="remove-player-title">Remover {player.name}?</h2>
+        <p>
+          Isso apaga o perfil e todos os palpites dessa pessoa. Se ela entrar no site de novo, volta do
+          zero como visitante.
+        </p>
+        <div className="confirm-actions">
+          <Button className="confirm-cancel-button" onClick={onCancel} variant="ghost">
+            Cancelar
+          </Button>
+          <button className="danger-button" type="button" onClick={onConfirm}>
+            Sim, remover
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 
