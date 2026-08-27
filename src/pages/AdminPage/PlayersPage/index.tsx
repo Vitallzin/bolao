@@ -130,8 +130,8 @@ function ConfirmRemovePlayerModal({
         <span className="eyebrow">Remover do bolao</span>
         <h2 id="remove-player-title">Remover {player.name}?</h2>
         <p>
-          Isso apaga o perfil e todos os palpites dessa pessoa. Se ela entrar no site de novo, volta do
-          zero como visitante.
+          Isso apaga a conta dessa pessoa de vez: perfil, palpites e o login. Para voltar ao bolao, ela
+          teria que criar uma conta nova do zero. Nao da para desfazer.
         </p>
         <div className="confirm-actions">
           <Button className="confirm-cancel-button" onClick={onCancel} variant="ghost">

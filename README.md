@@ -106,7 +106,7 @@ src/
   pages/          telas (login, dashboard, admin e suas sub-páginas)
   hooks/          integração com Firebase Auth e Firestore
   utils/          pontuação, datas, países, tratamento de erros
-api/              função serverless do Vercel (e-mail de confirmação de conta)
+api/              funções serverless do Vercel (e-mail de confirmação, remoção de jogador)
 scripts/notify/   script standalone que envia as notificações por e-mail (roda via GitHub Actions)
 ```
 
@@ -115,7 +115,15 @@ scripts/notify/   script standalone que envia as notificações por e-mail (roda
 Configuração completa (conta do Gmail, senha de app, secrets) em
 [`scripts/notify/README.md`](scripts/notify/README.md).
 
-## E-mail de confirmação de conta
+## Funções serverless (Vercel)
+
+Duas operações precisam do Admin SDK e por isso rodam no servidor, não no navegador:
+
+- [`api/send-verification-email.ts`](api/send-verification-email.ts) — gera o link de confirmação de
+  e-mail e envia com a identidade visual do projeto, no lugar do template padrão do Firebase.
+- [`api/delete-player.ts`](api/delete-player.ts) — remove um jogador de vez (perfil, palpites e a
+  conta no Firebase Auth). Só o admin consegue chamar, e não é possível remover a si mesmo nem outro
+  admin.
 
 No painel do Vercel (**Settings → Environment Variables**), além das variáveis `VITE_FIREBASE_*`,
 adicione (sem o prefixo `VITE_`, para não irem para o código do navegador):

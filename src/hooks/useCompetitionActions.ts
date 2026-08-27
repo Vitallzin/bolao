@@ -10,7 +10,7 @@ import {
   writeBatch,
 } from 'firebase/firestore'
 import { competitionId } from '../constants'
-import { db } from '../firebase'
+import { auth, db } from '../firebase'
 import type {
   CompetitionPrediction,
   CompetitionPredictionResult,
@@ -294,30 +294,32 @@ export function useCompetitionActions({
       return
     }
 
-    const batch = writeBatch(db)
+    if (!auth.currentUser) {
+      setMessage('Entre de novo para remover jogadores.')
+      return
+    }
 
-    predictions
-      .filter((prediction) => prediction.userId === userId)
-      .forEach((prediction) => {
-        batch.delete(doc(db, 'competitions', competitionId, 'predictions', prediction.id))
+    try {
+      const idToken = await auth.currentUser.getIdToken()
+      const response = await fetch('/api/delete-player', {
+        body: JSON.stringify({ userId }),
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
       })
 
-    knockoutPredictions
-      .filter((prediction) => prediction.userId === userId)
-      .forEach((prediction) => {
-        batch.delete(doc(db, 'competitions', competitionId, 'knockoutPredictions', prediction.id))
-      })
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        setMessage(data.error || 'Nao foi possivel remover o jogador.')
+        return
+      }
 
-    competitionPredictions
-      .filter((prediction) => prediction.userId === userId)
-      .forEach((prediction) => {
-        batch.delete(doc(db, 'competitions', competitionId, 'competitionPredictions', prediction.id))
-      })
-
-    batch.delete(doc(db, 'users', userId))
-
-    await batch.commit()
-    setMessage('Jogador removido do bolao.')
+      setMessage('Jogador removido do bolao.')
+    } catch {
+      setMessage('Nao foi possivel remover o jogador. Tente de novo em alguns segundos.')
+    }
   }
 
   async function addPlayerStat(event: FormEvent<HTMLFormElement>) {
