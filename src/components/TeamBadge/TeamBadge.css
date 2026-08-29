@@ -33,6 +33,31 @@
   padding: 0 7px;
 }
 
+/* 1o ao 8o: classificacao direta as oitavas. */
+.team-badge__chip--direct {
+  background: #0b2f7a;
+  box-shadow: inset 0 0 0 1px rgba(120, 170, 255, 0.45);
+}
+
+/* 9o ao 24o: disputam os playoffs. */
+.team-badge__chip--playoff {
+  background: #2f6bff;
+  box-shadow: inset 0 0 0 1px rgba(160, 200, 255, 0.5);
+}
+
+/* Fora da zona de classificacao: so o numero, sem quadrado. */
+.team-badge__rank {
+  align-items: center;
+  color: var(--app-muted);
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 0.78rem;
+  font-weight: 850;
+  height: 30px;
+  justify-content: center;
+  min-width: 42px;
+}
+
 @media (max-width: 620px) {
   .team-badge--right {
     justify-content: flex-start;

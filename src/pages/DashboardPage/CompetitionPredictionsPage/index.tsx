@@ -76,6 +76,7 @@ export function CompetitionPredictionsPage({
             Melhor goleiro
             <input disabled={locked} name="bestGoalkeeper" defaultValue={existingPrediction?.bestGoalkeeper ?? ''} />
           </label>
+          <PlayerNameHint />
         </section>
 
         <section className="competition-predictions-card">
@@ -132,7 +133,22 @@ function PredictionTopFive({
           <input disabled={disabled} name={`${name}-${index + 1}`} defaultValue={values[index] ?? ''} />
         </label>
       ))}
+      <PlayerNameHint />
     </section>
+  )
+}
+
+/**
+ * Os nomes sao comparados com o resultado oficial, entao vale avisar o formato esperado.
+ * A comparacao ignora acento e maiuscula, mas nao adivinha apelido ("CR7" nao vira "Cristiano Ronaldo").
+ */
+function PlayerNameHint() {
+  return (
+    <p className="player-name-hint">
+      Escreva o nome como o jogador é conhecido, com dois nomes — por exemplo{' '}
+      <strong>Kylian Mbappé</strong>, <strong>Thibaut Courtois</strong> ou{' '}
+      <strong>Vinícius Júnior</strong>. Não precisa se preocupar com acento ou maiúscula.
+    </p>
   )
 }
 
