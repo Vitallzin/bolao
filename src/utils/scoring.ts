@@ -1,11 +1,86 @@
 import type {
   CompetitionPrediction,
   CompetitionPredictionResult,
+  KnockoutPrediction,
   KnockoutTie,
   Match,
   Prediction,
   Team,
 } from '../types'
+
+export type PlayerPointsInput = {
+  competitionPredictionResult?: CompetitionPredictionResult
+  competitionPredictions: CompetitionPrediction[]
+  knockout: KnockoutTie[]
+  knockoutPredictions: KnockoutPrediction[]
+  matches: Match[]
+  predictions: Prediction[]
+}
+
+/** Uma perna do mata-mata so pontua depois que o admin publica o placar dela. */
+export function isKnockoutLegPublished(tie: KnockoutTie, leg: 'home' | 'away') {
+  if (tie.stage === 'final' && leg === 'away') {
+    return false
+  }
+
+  return leg === 'home'
+    ? Boolean(tie.homeLegScorePublished || tie.scorePublished)
+    : Boolean(tie.awayLegScorePublished || tie.scorePublished)
+}
+
+/**
+ * Pontuacao total de um jogador. E a fonte unica de verdade do ranking:
+ * roda no servidor (api/recalculate-ranking) e o resultado e gravado no Firestore.
+ */
+export function calculatePlayerPoints(userId: string, input: PlayerPointsInput) {
+  const roundPoints = input.predictions
+    .filter((prediction) => prediction.userId === userId)
+    .reduce((total, prediction) => {
+      const match = input.matches.find((item) => item.id === prediction.matchId)
+
+      if (!match || match.status !== 'finished') {
+        return total
+      }
+
+      return total + calculatePredictionPoints(prediction, match)
+    }, 0)
+
+  const knockoutPoints = input.knockoutPredictions
+    .filter((prediction) => prediction.userId === userId)
+    .reduce((total, prediction) => {
+      const tie = input.knockout.find((item) => item.id === prediction.tieId)
+
+      if (!tie || !isKnockoutLegPublished(tie, prediction.leg)) {
+        return total
+      }
+
+      return (
+        total +
+        calculateKnockoutPredictionPoints({
+          awayScore: prediction.awayScore,
+          homeScore: prediction.homeScore,
+          leg: prediction.leg,
+          tie,
+        })
+      )
+    }, 0)
+
+  const competitionPoints = calculateCompetitionPredictionPoints(
+    input.competitionPredictions.find((prediction) => prediction.userId === userId) ?? {
+      id: '',
+      userId,
+      topScorers: [],
+      topAssists: [],
+      bestPlayer: '',
+      bestGoalkeeper: '',
+      championTeamId: '',
+      runnerUpTeamId: '',
+    },
+    input.competitionPredictionResult,
+  )
+
+  return roundPoints + knockoutPoints + competitionPoints
+}
 
 export function calculatePredictionPoints(prediction: Prediction, match: Match) {
   return calculateScorePoints({
@@ -89,8 +164,16 @@ export function calculateCompetitionPredictionPoints(
   return (
     calculateTopFivePoints(prediction.topScorers, result.topScorers) +
     calculateTopFivePoints(prediction.topAssists, result.topAssists) +
-    calculateExactNamePoints(prediction.bestPlayer, result.bestPlayer, 150) +
-    calculateExactNamePoints(prediction.bestGoalkeeper, result.bestGoalkeeper, 100) +
+    calculateExactNamePoints(
+      prediction.bestPlayer,
+      result.bestPlayer,
+      competitionPredictionPoints.bestPlayer,
+    ) +
+    calculateExactNamePoints(
+      prediction.bestGoalkeeper,
+      result.bestGoalkeeper,
+      competitionPredictionPoints.bestGoalkeeper,
+    ) +
     calculateFinalistsPoints(prediction, result)
   )
 }
@@ -106,10 +189,12 @@ function calculateTopFivePoints(predicted: string[], actual: string[]) {
     }
 
     if (normalizedActual[index] === normalizedPlayer) {
-      return total + 100
+      return total + competitionPredictionPoints.topFiveExactPosition
     }
 
-    return normalizedActual.includes(normalizedPlayer) ? total + 50 : total
+    return normalizedActual.includes(normalizedPlayer)
+      ? total + competitionPredictionPoints.topFiveWrongPosition
+      : total
   }, 0)
 }
 
@@ -121,15 +206,15 @@ function calculateFinalistsPoints(prediction: CompetitionPrediction, result: Com
   let points = 0
 
   if (prediction.championTeamId && prediction.championTeamId === result.championTeamId) {
-    points += 300
+    points += competitionPredictionPoints.champion
   } else if (prediction.championTeamId && prediction.championTeamId === result.runnerUpTeamId) {
-    points += 100
+    points += competitionPredictionPoints.swappedFinalist
   }
 
   if (prediction.runnerUpTeamId && prediction.runnerUpTeamId === result.runnerUpTeamId) {
-    points += 150
+    points += competitionPredictionPoints.runnerUp
   } else if (prediction.runnerUpTeamId && prediction.runnerUpTeamId === result.championTeamId) {
-    points += 100
+    points += competitionPredictionPoints.swappedFinalist
   }
 
   return points
@@ -139,20 +224,46 @@ function normalizeName(value: string) {
   return value.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 }
 
-function getPredictionPointTable(stage: string) {
+export type PointTable = {
+  exact: number
+  offByOne: number
+  offByTwo: number
+  resultBonus: number
+}
+
+/** Tabelas de pontos por fase. Usadas no calculo e exibidas na aba Regras. */
+export const stagePointTables = {
+  early: { exact: 100, offByOne: 50, offByTwo: 25, resultBonus: 15 },
+  quartas: { exact: 150, offByOne: 75, offByTwo: 40, resultBonus: 25 },
+  semis: { exact: 200, offByOne: 100, offByTwo: 50, resultBonus: 35 },
+  final: { exact: 300, offByOne: 150, offByTwo: 75, resultBonus: 50 },
+} satisfies Record<string, PointTable>
+
+/** Pontos das previsoes da competicao. Usados no calculo e exibidos na aba Regras. */
+export const competitionPredictionPoints = {
+  topFiveExactPosition: 100,
+  topFiveWrongPosition: 50,
+  bestPlayer: 150,
+  bestGoalkeeper: 100,
+  champion: 300,
+  runnerUp: 150,
+  swappedFinalist: 100,
+}
+
+function getPredictionPointTable(stage: string): PointTable {
   if (stage === 'quartas') {
-    return { exact: 150, offByOne: 75, offByTwo: 40, resultBonus: 25 }
+    return stagePointTables.quartas
   }
 
   if (stage === 'semis') {
-    return { exact: 200, offByOne: 100, offByTwo: 50, resultBonus: 35 }
+    return stagePointTables.semis
   }
 
   if (stage === 'final') {
-    return { exact: 300, offByOne: 150, offByTwo: 75, resultBonus: 50 }
+    return stagePointTables.final
   }
 
-  return { exact: 100, offByOne: 50, offByTwo: 25, resultBonus: 15 }
+  return stagePointTables.early
 }
 
 export function buildStandings(teams: Team[], matches: Match[]) {

@@ -12,6 +12,7 @@ import type {
   Player,
   PlayerStat,
   Prediction,
+  RankingEntry,
   Round,
   Team,
 } from '../types'
@@ -28,6 +29,7 @@ export function useCompetitionData(authUser: User | null) {
   const [playerStats, setPlayerStats] = useState<PlayerStat[]>([])
   const [knockout, setKnockout] = useState<KnockoutTie[]>([])
   const [knockoutPredictions, setKnockoutPredictions] = useState<KnockoutPrediction[]>([])
+  const [ranking, setRanking] = useState<RankingEntry[]>([])
 
   useEffect(() => {
     if (!authUser) {
@@ -237,6 +239,21 @@ export function useCompetitionData(authUser: User | null) {
             .sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
         )
       }),
+      onSnapshot(collection(db, 'competitions', competitionId, 'ranking'), (snapshot) => {
+        const current = snapshot.docs.find((item) => item.id === 'current')
+        const entries = current?.data()?.entries
+
+        setRanking(
+          Array.isArray(entries)
+            ? entries.map((entry) => ({
+              userId: String(entry?.userId ?? ''),
+              name: String(entry?.name ?? 'Jogador'),
+              photoURL: typeof entry?.photoURL === 'string' ? entry.photoURL : null,
+              points: Number(entry?.points ?? 0),
+            }))
+            : [],
+        )
+      }),
     ]
 
     return () => unsubscribers.forEach((unsubscribe) => unsubscribe())
@@ -251,6 +268,7 @@ export function useCompetitionData(authUser: User | null) {
     players,
     playerStats,
     predictions,
+    ranking,
     rounds,
     teams,
   }

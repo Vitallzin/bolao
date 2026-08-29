@@ -231,6 +231,7 @@ export function useCompetitionActions({
       publishedAt: serverTimestamp(),
     })
     setMessage('Pontuacao das previsoes publicada no ranking.')
+    await recalculateRanking()
   }
 
   async function addTeam(event: FormEvent<HTMLFormElement>) {
@@ -283,9 +284,34 @@ export function useCompetitionActions({
     setMessage('Time excluido.')
   }
 
+  /**
+   * O ranking e calculado no servidor e gravado no Firestore. Toda acao do admin que
+   * muda a pontuacao precisa pedir o recalculo, senao o ranking fica desatualizado.
+   */
+  async function recalculateRanking() {
+    if (!auth.currentUser) {
+      return
+    }
+
+    try {
+      const idToken = await auth.currentUser.getIdToken()
+      const response = await fetch('/api/recalculate-ranking', {
+        headers: { Authorization: `Bearer ${idToken}` },
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        setMessage('Publicado, mas o ranking nao atualizou. Recalcule de novo em instantes.')
+      }
+    } catch {
+      setMessage('Publicado, mas o ranking nao atualizou. Recalcule de novo em instantes.')
+    }
+  }
+
   async function approveUser(userId: string, approved: boolean) {
     await updateDoc(doc(db, 'users', userId), { approved })
     setMessage(approved ? 'Agora e jogador.' : 'Agora e visitante.')
+    await recalculateRanking()
   }
 
   async function deletePlayer(userId: string) {
@@ -317,6 +343,7 @@ export function useCompetitionActions({
       }
 
       setMessage('Jogador removido do bolao.')
+      await recalculateRanking()
     } catch {
       setMessage('Nao foi possivel remover o jogador. Tente de novo em alguns segundos.')
     }
@@ -500,6 +527,7 @@ export function useCompetitionActions({
       publishedAt: serverTimestamp(),
     })
     setMessage('Resultado publicado. Ranking e tabela ja foram recalculados.')
+    await recalculateRanking()
   }
 
   async function addKnockoutTie(event: FormEvent<HTMLFormElement>) {
@@ -721,6 +749,7 @@ export function useCompetitionActions({
         homeLegPublishedAt: serverTimestamp(),
       })
       setMessage('Placar de ida publicado.')
+      await recalculateRanking()
       return
     }
 
@@ -740,6 +769,7 @@ export function useCompetitionActions({
         awayLegPublishedAt: serverTimestamp(),
       })
       setMessage('Placar de volta publicado.')
+      await recalculateRanking()
       return
     }
 
@@ -761,6 +791,7 @@ export function useCompetitionActions({
       publishedAt: serverTimestamp(),
     })
     setMessage('Placar do mata-mata publicado.')
+    await recalculateRanking()
   }
 
   async function updateWinner(tieId: string, winnerTeamId: string) {

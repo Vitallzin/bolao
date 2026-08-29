@@ -8,14 +8,9 @@ import { db } from './firebase'
 import { useAuthProfile } from './hooks/useAuthProfile'
 import { useCompetitionActions } from './hooks/useCompetitionActions'
 import { useCompetitionData } from './hooks/useCompetitionData'
-import type { KnockoutTie, View } from './types'
+import type { View } from './types'
 import { getFirebaseMessage } from './utils/firebaseErrors'
-import {
-  buildStandings,
-  calculateCompetitionPredictionPoints,
-  calculateKnockoutPredictionPoints,
-  calculatePredictionPoints,
-} from './utils/scoring'
+import { buildStandings } from './utils/scoring'
 import './App.css'
 
 function App() {
@@ -46,6 +41,7 @@ function App() {
     playerStats,
     players,
     predictions,
+    ranking,
     rounds,
     teams,
   } = useCompetitionData(authUser)
@@ -60,58 +56,6 @@ function App() {
   )
   const isAdmin = currentUser?.role === 'admin'
   const standings = useMemo(() => buildStandings(teams, matches), [matches, teams])
-  const ranking = useMemo(
-    () =>
-      players
-        .filter((player) => player.approved)
-        .map((player) => {
-          const points = predictions
-            .filter((prediction) => prediction.userId === player.id)
-            .reduce((total, prediction) => {
-              const match = matches.find((item) => item.id === prediction.matchId)
-
-              if (!match || match.status !== 'finished') {
-                return total
-              }
-
-              return total + calculatePredictionPoints(prediction, match)
-            }, 0)
-
-          const knockoutPoints = knockoutPredictions
-            .filter((prediction) => prediction.userId === player.id)
-            .reduce((total, prediction) => {
-              const tie = knockout.find((item) => item.id === prediction.tieId)
-
-              if (!tie || !isKnockoutLegPublished(tie, prediction.leg)) {
-                return total
-              }
-
-              return total + calculateKnockoutPredictionPoints({
-                awayScore: prediction.awayScore,
-                homeScore: prediction.homeScore,
-                leg: prediction.leg,
-                tie,
-              })
-            }, 0)
-          const competitionPoints = calculateCompetitionPredictionPoints(
-            competitionPredictions.find((prediction) => prediction.userId === player.id) ?? {
-              id: '',
-              userId: player.id,
-              topScorers: [],
-              topAssists: [],
-              bestPlayer: '',
-              bestGoalkeeper: '',
-              championTeamId: '',
-              runnerUpTeamId: '',
-            },
-            competitionPredictionResult,
-          )
-
-          return { ...player, points: points + knockoutPoints + competitionPoints }
-        })
-        .sort((a, b) => b.points - a.points),
-    [competitionPredictionResult, competitionPredictions, knockout, knockoutPredictions, matches, players, predictions],
-  )
 
   const actions = useCompetitionActions({
     competitionPredictionResult,
@@ -281,16 +225,6 @@ function App() {
       onWinnerChange={actions.updateWinner}
     />
   )
-}
-
-function isKnockoutLegPublished(tie: KnockoutTie, leg: 'home' | 'away') {
-  if (tie.stage === 'final' && leg === 'away') {
-    return false
-  }
-
-  return leg === 'home'
-    ? Boolean(tie.homeLegScorePublished || tie.scorePublished)
-    : Boolean(tie.awayLegScorePublished || tie.scorePublished)
 }
 
 export default App

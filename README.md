@@ -42,7 +42,9 @@ e-mail agendadas.
 - **Palpites separados por rodada** da fase de liga e por confronto de mata-mata (ida e volta), cada etapa com seu próprio prazo.
 - **Previsões da competição** — campeão, vice, artilheiro, garçom, melhor jogador e melhor goleiro.
 - **Classificação da fase de liga** calculada com o critério de desempate oficial da UEFA (pontos, saldo de gols, gols marcados, gols fora, vitórias, vitórias fora e força dos adversários enfrentados).
-- **Ranking** dos jogadores com destaque para o pódio.
+- **Ranking** dos jogadores com destaque para o pódio, calculado no servidor e gravado no banco.
+- **Aba de regras** explicando a pontuação de cada fase e os prazos, gerada a partir da mesma tabela
+  usada no cálculo — os valores exibidos nunca ficam desatualizados.
 - **Painel administrativo** completo — times, rodadas, mata-mata, estatísticas de jogadores, publicação de resultados e aprovação de usuários.
 - **Notificações por e-mail** configuráveis por jogador — aviso de rodada nova e lembrete de prazo, com envio automático agendado.
 
@@ -124,6 +126,10 @@ Duas operações precisam do Admin SDK e por isso rodam no servidor, não no nav
 - [`api/delete-player.ts`](api/delete-player.ts) — remove um jogador de vez (perfil, palpites e a
   conta no Firebase Auth). Só o admin consegue chamar, e não é possível remover a si mesmo nem outro
   admin.
+- [`api/recalculate-ranking.ts`](api/recalculate-ranking.ts) — recalcula a pontuação de todos os
+  jogadores e grava o resultado em `competitions/{id}/ranking/current`. É disparado após cada
+  publicação do admin. O navegador apenas **lê** esse ranking: as regras bloqueiam escrita nessa
+  coleção para todo mundo, então a pontuação só pode vir do servidor.
 
 No painel do Vercel (**Settings → Environment Variables**), além das variáveis `VITE_FIREBASE_*`,
 adicione (sem o prefixo `VITE_`, para não irem para o código do navegador):

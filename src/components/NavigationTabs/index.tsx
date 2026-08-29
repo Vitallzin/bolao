@@ -10,7 +10,7 @@ type NavigationTabsProps = {
 export function NavigationTabs({ activeView, onChange }: NavigationTabsProps) {
   return (
     <nav className="tabs" aria-label="Navegacao principal">
-      {(['palpites', 'previsoes', 'ranking', 'champions', 'statistics', 'mata-mata'] as View[]).map((view) => (
+      {(['palpites', 'previsoes', 'ranking', 'champions', 'statistics', 'mata-mata', 'regras'] as View[]).map((view) => (
         <button
           key={view}
           className={activeView === view ? 'active' : ''}

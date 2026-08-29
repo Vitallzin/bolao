@@ -50,6 +50,7 @@ export const europeanCountries: EuropeanCountry[] = [
   { code: 'UA', name: 'Ucrania' },
   { code: 'GB', name: 'Reino Unido' },
   { code: 'VA', name: 'Vaticano' },
+  {code: 'AZ', name: 'Azerbaijão' },
 ]
 
 export function getCountryName(countryCode: string) {

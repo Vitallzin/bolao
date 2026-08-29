@@ -1,6 +1,13 @@
 export type Role = 'user' | 'admin'
 
-export type View = 'palpites' | 'previsoes' | 'ranking' | 'champions' | 'statistics' | 'mata-mata'
+export type View =
+  | 'palpites'
+  | 'previsoes'
+  | 'ranking'
+  | 'champions'
+  | 'statistics'
+  | 'mata-mata'
+  | 'regras'
 
 export type MatchStatus = 'scheduled' | 'finished'
 
@@ -85,6 +92,13 @@ export type CompetitionPredictionResult = {
   championTeamId: string
   runnerUpTeamId: string
   published?: boolean
+}
+
+export type RankingEntry = {
+  userId: string
+  name: string
+  photoURL?: string | null
+  points: number
 }
 
 export type NotificationPreferences = {

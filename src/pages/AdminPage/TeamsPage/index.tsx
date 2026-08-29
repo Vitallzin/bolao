@@ -132,31 +132,57 @@ function RegisteredTeams({
   onEdit: (team: Team) => void
   teams: Team[]
 }) {
+  const [search, setSearch] = useState('')
+  const normalizedSearch = normalizeText(search)
+  const filteredTeams = normalizedSearch
+    ? teams.filter((team) =>
+      normalizeText(`${team.name} ${team.shortName} ${team.countryName ?? ''}`).includes(normalizedSearch),
+    )
+    : teams
+
   return (
     <div className="admin-panel registered-teams">
       <span className="eyebrow">Times</span>
       <h2>Times cadastrados</h2>
+
       {teams.length === 0 ? (
         <p className="muted-text">Nenhum time cadastrado ainda.</p>
       ) : (
-        <div className="registered-team-list">
-          {teams.map((team) => (
-            <article className="registered-team" key={team.id}>
-              <TeamBadge team={team} />
-              <div className="registered-team__actions">
-                <Button onClick={() => onEdit(team)} variant="ghost">
-                  Editar
-                </Button>
-                <button className="danger-button" type="button" onClick={() => onDeleteRequest(team)}>
-                  Excluir
-                </button>
-              </div>
-            </article>
-          ))}
-        </div>
+        <>
+          <input
+            aria-label="Pesquisar time cadastrado"
+            placeholder="Pesquisar time..."
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+
+          {filteredTeams.length === 0 ? (
+            <p className="muted-text">Nenhum time encontrado para "{search}".</p>
+          ) : (
+            <div className="registered-team-list">
+              {filteredTeams.map((team) => (
+                <article className="registered-team" key={team.id}>
+                  <TeamBadge team={team} />
+                  <div className="registered-team__actions">
+                    <Button onClick={() => onEdit(team)} variant="ghost">
+                      Editar
+                    </Button>
+                    <button className="danger-button" type="button" onClick={() => onDeleteRequest(team)}>
+                      Excluir
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   )
+}
+
+function normalizeText(value: string) {
+  return value.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 }
 
 function EditTeamModal({

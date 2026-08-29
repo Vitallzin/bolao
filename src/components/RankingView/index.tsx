@@ -1,9 +1,9 @@
 import { EmptyState } from '../EmptyState'
-import type { Player } from '../../types'
+import type { RankingEntry } from '../../types'
 import './RankingView.css'
 
 type RankingViewProps = {
-  ranking: Array<Player & { points: number }>
+  ranking: RankingEntry[]
 }
 
 export function RankingView({ ranking }: RankingViewProps) {
@@ -31,7 +31,7 @@ export function RankingView({ ranking }: RankingViewProps) {
           const positionClass = getPositionClassName(place)
 
           return (
-            <article className="ranking-row" key={player.id}>
+            <article className="ranking-row" key={player.userId}>
               <span className={positionClass}>{place}</span>
               <div>
                 <strong>{player.name}</strong>

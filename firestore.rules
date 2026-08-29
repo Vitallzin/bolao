@@ -154,6 +154,13 @@ service cloud.firestore {
         allow read: if signedIn();
         allow write: if isAdmin();
       }
+
+      // Ranking calculado no servidor (api/recalculate-ranking) com o Admin SDK,
+      // que ignora estas regras. Ninguem grava pelo navegador, nem o admin.
+      match /ranking/{docId} {
+        allow read: if signedIn();
+        allow write: if false;
+      }
     }
   }
 }

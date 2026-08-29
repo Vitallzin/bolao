@@ -8,6 +8,7 @@ import { CompetitionPredictionsPage } from './CompetitionPredictionsPage'
 import { KnockoutPage } from './KnockoutPage'
 import { PredictionsPage } from './PredictionsPage'
 import { RankingPage } from './RankingPage'
+import { RulesPage } from './RulesPage'
 import { StatisticsPage } from './StatisticsPage'
 import type {
   CompetitionPrediction,
@@ -19,6 +20,7 @@ import type {
   Player,
   PlayerStat,
   Prediction,
+  RankingEntry,
   Round,
   Team,
   View,
@@ -86,7 +88,7 @@ type DashboardPageProps = {
   playerStats: PlayerStat[]
   players: Player[]
   publishedRounds: Round[]
-  ranking: Array<Player & { points: number }>
+  ranking: RankingEntry[]
   rounds: Round[]
   standings: ReturnType<typeof buildStandings>
   teamMap: Map<string, Team>
@@ -271,6 +273,8 @@ export function DashboardPage({
           teamMap={teamMap}
         />
       ) : null}
+
+      {!adminMode && activeView === 'regras' ? <RulesPage /> : null}
     </main>
   )
 }

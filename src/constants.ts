@@ -17,4 +17,5 @@ export const viewLabels: Record<View, string> = {
   champions: 'Tabela',
   statistics: 'Estatísticas',
   'mata-mata': 'Chaveamento',
+  regras: 'Regras',
 }
