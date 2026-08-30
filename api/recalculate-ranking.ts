@@ -21,6 +21,14 @@ if (getApps().length === 0) {
 
 const db = getFirestore()
 
+// Um campo opcional ausente vira undefined, e o Firestore recusa undefined na escrita.
+// Sem isso, um unico dado faltando derruba o recalculo inteiro.
+try {
+  db.settings({ ignoreUndefinedProperties: true })
+} catch {
+  // settings() so aceita ser chamado uma vez; se ja foi, seguimos com o que esta valendo.
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' })
@@ -35,21 +43,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return
   }
 
+  let isAdmin = false
+
   try {
     const caller = await getAuth().verifyIdToken(idToken)
     const callerDoc = await db.collection('users').doc(caller.uid).get()
+    isAdmin = callerDoc.data()?.role === 'admin'
+  } catch (error) {
+    console.error('recalculate-ranking auth failed:', error)
+    res.status(401).json({ error: 'Nao consegui validar seu login.' })
+    return
+  }
 
-    if (callerDoc.data()?.role !== 'admin') {
-      res.status(403).json({ error: 'Apenas o admin pode recalcular o ranking.' })
-      return
-    }
+  if (!isAdmin) {
+    res.status(403).json({ error: 'Apenas o admin pode recalcular o ranking.' })
+    return
+  }
 
+  try {
     const entries = await recalculateRanking()
 
     res.status(200).json({ players: entries.length, updatedAt: new Date().toISOString() })
   } catch (error) {
+    // So o admin chega aqui, entao devolver o erro real ajuda a diagnosticar.
+    const detail = error instanceof Error ? `${error.name}: ${error.message}` : String(error)
+
     console.error('recalculate-ranking failed:', error)
-    res.status(500).json({ error: 'Nao foi possivel recalcular o ranking.' })
+    res.status(500).json({ error: detail.slice(0, 300) })
   }
 }
 
@@ -127,7 +147,7 @@ async function recalculateRanking() {
 
   await competition.collection('ranking').doc('current').set({
     entries,
-    lastScoredRoundId,
+    lastScoredRoundId: lastScoredRoundId ?? null,
     updatedAt: Timestamp.now(),
   })
 
