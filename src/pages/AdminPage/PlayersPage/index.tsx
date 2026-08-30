@@ -6,6 +6,7 @@ import './PlayersPage.css'
 type PlayersPageProps = {
   onApproveUser: (userId: string, approved: boolean) => void
   onDeletePlayer: (userId: string) => void
+  onRecalculateRanking: () => void
   players: Player[]
 }
 
@@ -14,7 +15,12 @@ type PendingRoleChange = {
   player: Player
 }
 
-export function PlayersPage({ onApproveUser, onDeletePlayer, players }: PlayersPageProps) {
+export function PlayersPage({
+  onApproveUser,
+  onDeletePlayer,
+  onRecalculateRanking,
+  players,
+}: PlayersPageProps) {
   const [pendingChange, setPendingChange] = useState<PendingRoleChange | null>(null)
   const [playerToRemove, setPlayerToRemove] = useState<Player | null>(null)
   const orderedPlayers = [...players].sort(
@@ -39,6 +45,13 @@ export function PlayersPage({ onApproveUser, onDeletePlayer, players }: PlayersP
           ? `${visitorCount} pessoa(s) como visitante ainda. Visitante so consegue ver o site; jogador tambem envia palpites e aparece no ranking.`
           : 'Todo mundo que entrou ja esta como jogador ou e admin.'}
       </p>
+
+      {/* O ranking e calculado no servidor. Se ficar desatualizado, da para forcar aqui. */}
+      <div className="players-admin__actions">
+        <Button onClick={onRecalculateRanking} variant="ghost">
+          Recalcular ranking
+        </Button>
+      </div>
 
       {orderedPlayers.length === 0 ? (
         <p className="muted-text">Ninguem entrou no site ainda.</p>

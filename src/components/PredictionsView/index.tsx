@@ -13,7 +13,7 @@ import type {
   Team,
 } from '../../types'
 import { formatDateTime } from '../../utils/date'
-import { calculatePredictionPoints, getPointsTier, stagePointTables } from '../../utils/scoring'
+import { calculatePredictionPoints, stagePointTables } from '../../utils/scoring'
 import './PredictionsView.css'
 
 type PredictionsViewProps = {
@@ -137,8 +137,20 @@ function RoundPredictions({
     day,
     matches: matches.filter((match) => match.day === day),
   }))
+  const myPredictions = predictions.filter((item) => item.userId === currentUser.id)
   const hasResults = matches.some((match) => match.status === 'finished')
-  const roundSummary = hasResults ? getRoundSummary(ranking, currentUser.id, round.id) : null
+  // O total sai dos proprios palpites, entao aparece mesmo se o ranking do servidor estiver atrasado.
+  const myRoundPoints = matches.reduce((total, match) => {
+    const prediction = myPredictions.find((item) => item.matchId === match.id)
+
+    if (!prediction || match.status !== 'finished') {
+      return total
+    }
+
+    return total + calculatePredictionPoints(prediction, match)
+  }, 0)
+  // A colocacao depende de comparar com os outros, entao so aparece com o ranking disponivel.
+  const roundStanding = getRoundStanding(ranking, currentUser.id, round.id)
 
   if (matches.length === 0) {
     return (
@@ -156,16 +168,16 @@ function RoundPredictions({
           {locked ? 'Fechada' : `Aberta ate ${formatDateTime(round.deadline)}`}
         </span>
 
-        {roundSummary ? (
+        {hasResults ? (
           <div className="round-score-summary">
             <div className="round-score-summary__points">
-              <strong>{roundSummary.points}</strong>
+              <strong>{myRoundPoints}</strong>
               <span>pts nessa rodada</span>
             </div>
-            {roundSummary.position ? (
+            {roundStanding ? (
               <div className="round-score-summary__position">
-                <strong>{roundSummary.position}º</strong>
-                <span>de {roundSummary.total} na rodada</span>
+                <strong>{roundStanding.position}º</strong>
+                <span>de {roundStanding.total} na rodada</span>
               </div>
             ) : null}
           </div>
@@ -188,49 +200,54 @@ function RoundPredictions({
                   ? calculatePredictionPoints(prediction, match)
                   : null
 
+                // Cravou o placar? Mostrar o placar real seria repetir o mesmo numero.
+                const showRealScore = finished && matchPoints !== stagePointTables.early.exact
+
                 return (
                   <article className="match-row" key={match.id}>
                     <TeamBadge team={teamMap.get(match.homeTeamId)} />
-                    <div className="match-score-cell">
-                      <input
-                        aria-label={`Palpite ${teamMap.get(match.homeTeamId)?.name}`}
-                        disabled={locked}
-                        min="0"
-                        placeholder="0"
-                        type="number"
-                        value={prediction?.homeScore ?? ''}
-                        onChange={(event) => onPredictionChange(match.id, 'homeScore', event.target.value)}
-                      />
-                      {finished ? <small className="match-real-score">{match.realHomeScore}</small> : null}
+
+                    <div className="match-scores">
+                      <div className="score-group">
+                        {showRealScore ? <span className="score-group__label">Meu palpite</span> : null}
+                        <div className="score-group__values">
+                          <input
+                            aria-label={`Palpite ${teamMap.get(match.homeTeamId)?.name}`}
+                            disabled={locked}
+                            min="0"
+                            placeholder="0"
+                            type="number"
+                            value={prediction?.homeScore ?? ''}
+                            onChange={(event) => onPredictionChange(match.id, 'homeScore', event.target.value)}
+                          />
+                          <span className="versus">x</span>
+                          <input
+                            aria-label={`Palpite ${teamMap.get(match.awayTeamId)?.name}`}
+                            disabled={locked}
+                            min="0"
+                            placeholder="0"
+                            type="number"
+                            value={prediction?.awayScore ?? ''}
+                            onChange={(event) => onPredictionChange(match.id, 'awayScore', event.target.value)}
+                          />
+                        </div>
+                      </div>
+
+                      {showRealScore ? (
+                        <div className="score-group score-group--real">
+                          <span className="score-group__label">Placar real</span>
+                          <div className="score-group__values">
+                            <span className="score-box">{match.realHomeScore}</span>
+                            <span className="versus">x</span>
+                            <span className="score-box">{match.realAwayScore}</span>
+                          </div>
+                        </div>
+                      ) : null}
                     </div>
-                    <span className="versus">x</span>
-                    <div className="match-score-cell">
-                      <input
-                        aria-label={`Palpite ${teamMap.get(match.awayTeamId)?.name}`}
-                        disabled={locked}
-                        min="0"
-                        placeholder="0"
-                        type="number"
-                        value={prediction?.awayScore ?? ''}
-                        onChange={(event) => onPredictionChange(match.id, 'awayScore', event.target.value)}
-                      />
-                      {finished ? <small className="match-real-score">{match.realAwayScore}</small> : null}
-                    </div>
+
                     <TeamBadge team={teamMap.get(match.awayTeamId)} align="right" />
 
-                    {matchPoints !== null ? (
-                      <span
-                        className={`match-points match-points--${getPointsTier(matchPoints, stagePointTables.early.exact)}`}
-                        title={
-                          matchPoints === stagePointTables.early.exact
-                            ? 'Placar exato!'
-                            : `${matchPoints} ponto(s) nesse jogo`
-                        }
-                      >
-                        {matchPoints === stagePointTables.early.exact ? 'Cravou! ' : ''}
-                        {matchPoints} pts
-                      </span>
-                    ) : null}
+                    {matchPoints !== null ? <MatchPoints points={matchPoints} /> : null}
                   </article>
                 )
               })}
@@ -238,7 +255,76 @@ function RoundPredictions({
           </section>
         ))}
       </div>
+
+      {hasResults ? <PointsLegend /> : null}
     </>
+  )
+}
+
+/** Cravou (placar exato), parcial (acertou parte) ou errou. */
+function getMatchOutcome(points: number) {
+  if (points >= stagePointTables.early.exact) {
+    return 'exact' as const
+  }
+
+  return points > 0 ? ('partial' as const) : ('miss' as const)
+}
+
+function MatchPoints({ points }: { points: number }) {
+  const outcome = getMatchOutcome(points)
+  const labels = { exact: 'Cravou!', miss: 'Errou', partial: 'Parcial' }
+  const icons = { exact: '✓', miss: '✕', partial: '★' }
+
+  return (
+    <div className={`match-points match-points--${outcome}`}>
+      <span className="match-points__icon" aria-hidden="true">
+        {icons[outcome]}
+      </span>
+      <span className="match-points__value">
+        <strong>{points > 0 ? `+${points}` : '0'} pts</strong>
+        <small>{labels[outcome]}</small>
+      </span>
+    </div>
+  )
+}
+
+function PointsLegend() {
+  const { exact, offByTwo, offByOne, resultBonus } = stagePointTables.early
+
+  return (
+    <div className="points-legend">
+      <div className="points-legend__item points-legend__item--exact">
+        <span className="match-points__icon" aria-hidden="true">✓</span>
+        <div>
+          <strong>Cravou!</strong>
+          <small>Placar exato. {exact} pontos.</small>
+        </div>
+      </div>
+      <div className="points-legend__item points-legend__item--partial">
+        <span className="match-points__icon" aria-hidden="true">★</span>
+        <div>
+          <strong>Parcial</strong>
+          <small>
+            Acertou o vencedor ou chegou perto do placar. De {resultBonus} a {offByOne + resultBonus}{' '}
+            pontos.
+          </small>
+        </div>
+      </div>
+      <div className="points-legend__item points-legend__item--miss">
+        <span className="match-points__icon" aria-hidden="true">✕</span>
+        <div>
+          <strong>Errou</strong>
+          <small>Nao acertou nada do palpite. 0 pontos.</small>
+        </div>
+      </div>
+      <div className="points-legend__item points-legend__item--info">
+        <span className="match-points__icon" aria-hidden="true">🏆</span>
+        <div>
+          <strong>Pontuacao</strong>
+          <small>Erro de 2 gols ainda vale {offByTwo}. Quanto mais avancada a fase, mais pontos.</small>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -369,10 +455,10 @@ function buildPredictionSteps(rounds: Round[], knockout: KnockoutTie[]) {
 }
 
 /**
- * Pontos do jogador na rodada e a colocacao dele entre todos naquela rodada.
- * Usa o ranking gravado pelo servidor, entao bate com o que os outros veem.
+ * Colocacao do jogador na rodada, comparando com os outros. Depende do ranking
+ * gravado pelo servidor; sem ele, a posicao simplesmente nao e exibida.
  */
-function getRoundSummary(ranking: RankingEntry[], userId: string, roundId: string) {
+function getRoundStanding(ranking: RankingEntry[], userId: string, roundId: string) {
   const me = ranking.find((entry) => entry.userId === userId)
 
   if (!me) {
@@ -384,7 +470,7 @@ function getRoundSummary(ranking: RankingEntry[], userId: string, roundId: strin
   // Empate divide a mesma colocacao: a posicao e quantos fizeram mais, +1.
   const position = scores.filter((score) => score > points).length + 1
 
-  return { points, position, total: ranking.length }
+  return { position, total: ranking.length }
 }
 
 function getStageTies(knockout: KnockoutTie[], stage: string) {

@@ -60,3 +60,8 @@
     justify-self: start;
   }
 }
+
+.players-admin__actions {
+  display: flex;
+  justify-content: flex-start;
+}

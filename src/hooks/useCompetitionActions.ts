@@ -960,6 +960,7 @@ export function useCompetitionActions({
     publishScore,
     publishRound,
     deleteRound,
+    recalculateRanking,
     publishKnockoutScore,
     saveCompetitionPredictionDeadline,
     saveCompetitionPredictionResult,

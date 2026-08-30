@@ -71,6 +71,7 @@ type DashboardPageProps = {
   onSaveCompetitionPredictionDeadline: (value: string) => void
   onPublishKnockoutScore: (tieId: string, leg?: 'home' | 'away') => void
   onDeleteRound: (roundNumber: number) => void
+  onRecalculateRanking: () => void
   onPublishRound: (roundNumber: number, deadline: string) => void
   onPublishScore: (matchId: string) => void
   onRealScoreChange: (matchId: string, side: 'realHomeScore' | 'realAwayScore', value: string) => void
@@ -135,6 +136,7 @@ export function DashboardPage({
   onSaveCompetitionPredictionDeadline,
   onPublishKnockoutScore,
   onDeleteRound,
+  onRecalculateRanking,
   onPublishRound,
   onPublishScore,
   onRealScoreChange,
@@ -221,6 +223,7 @@ export function DashboardPage({
           onSaveCompetitionPredictionDeadline={onSaveCompetitionPredictionDeadline}
           onPublishKnockoutScore={onPublishKnockoutScore}
           onDeleteRound={onDeleteRound}
+          onRecalculateRanking={onRecalculateRanking}
           onPublishRound={onPublishRound}
           onPublishScore={onPublishScore}
           onRealScoreChange={onRealScoreChange}

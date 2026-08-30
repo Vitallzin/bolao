@@ -34,6 +34,7 @@ type AdminPageProps = {
   onKnockoutTeamSlotChange: (tieId: string, slot: 'home' | 'away', teamId: string) => void
   onPublishKnockoutScore: (tieId: string, leg?: 'home' | 'away') => void
   onDeleteRound: (roundNumber: number) => void
+  onRecalculateRanking: () => void
   onPublishRound: (roundNumber: number, deadline: string) => void
   onPublishScore: (matchId: string) => void
   onPublishCompetitionPredictionResult: () => void
@@ -83,6 +84,7 @@ export function AdminPage({
   onKnockoutTeamSlotChange,
   onPublishKnockoutScore,
   onDeleteRound,
+  onRecalculateRanking,
   onPublishRound,
   onPublishScore,
   onPublishCompetitionPredictionResult,
@@ -125,7 +127,12 @@ export function AdminPage({
       </nav>
 
       {activeSection === 'players' ? (
-        <PlayersPage players={players} onApproveUser={onApproveUser} onDeletePlayer={onDeletePlayer} />
+        <PlayersPage
+          players={players}
+          onApproveUser={onApproveUser}
+          onDeletePlayer={onDeletePlayer}
+          onRecalculateRanking={onRecalculateRanking}
+        />
       ) : null}
 
       {activeSection === 'teams' ? (
