@@ -19,6 +19,7 @@ type RoundDrafts = Record<number, RoundDraft>
 
 type RoundsPageProps = {
   matches: Match[]
+  onDeleteRound: (roundNumber: number) => void
   onPublishRound: (roundNumber: number, deadline: string) => void
   onPublishScore: (matchId: string) => void
   onRealScoreChange: (matchId: string, side: 'realHomeScore' | 'realAwayScore', value: string) => void
@@ -36,6 +37,7 @@ const matchSlots = Array.from({ length: 9 }, (_, index) => index + 1)
 
 export function RoundsPage({
   matches,
+  onDeleteRound,
   onPublishRound,
   onPublishScore,
   onRealScoreChange,
@@ -46,6 +48,7 @@ export function RoundsPage({
 }: RoundsPageProps) {
   const [selectedRoundNumber, setSelectedRoundNumber] = useState(1)
   const [roundDrafts, setRoundDrafts] = useState<RoundDrafts>({})
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const round = rounds.find((item) => item.number === selectedRoundNumber || item.id === `round-${selectedRoundNumber}`)
   const roundId = `round-${selectedRoundNumber}`
   const roundMatches = matches.filter((match) => match.roundId === roundId)
@@ -115,76 +118,130 @@ export function RoundsPage({
     })
   }
 
+  const roundExists = Boolean(round) || roundMatches.length > 0
+
   return (
-    <form className="rounds-manager" onSubmit={(event) => onSaveRound(selectedRoundNumber, activeDeadline, event)}>
-      <div className="admin-panel round-overview">
-        <div className="round-status-line">
-          <span>{filledMatchCount}/18 jogos</span>
-          <span>{isPublished ? 'Rodada publicada' : 'Rascunho'}</span>
+    <>
+      <form className="rounds-manager" onSubmit={(event) => onSaveRound(selectedRoundNumber, activeDeadline, event)}>
+        <div className="admin-panel round-overview">
+          <div className="round-status-line">
+            <span>{filledMatchCount}/18 jogos</span>
+            <span>{isPublished ? 'Rodada publicada' : 'Rascunho'}</span>
+          </div>
+          <div className="round-nav">
+            <button type="button" onClick={goToPreviousRound} disabled={selectedRoundNumber === 1}>
+              &lt;
+            </button>
+            <h2>Rodada {selectedRoundNumber}</h2>
+            <button type="button" onClick={goToNextRound} disabled={selectedRoundNumber === 8}>
+              &gt;
+            </button>
+          </div>
+          <label className="deadline-field">
+            Data e horario limite
+            <input
+              max="9999-12-31T23:59"
+              type="datetime-local"
+              value={activeDeadline}
+              onInput={(event) => {
+                event.currentTarget.value = normalizeDateTimeInput(event.currentTarget.value)
+              }}
+              onChange={(event) => updateDeadlineDraft(event.target.value)}
+            />
+          </label>
         </div>
-        <div className="round-nav">
-          <button type="button" onClick={goToPreviousRound} disabled={selectedRoundNumber === 1}>
-            &lt;
-          </button>
-          <h2>Rodada {selectedRoundNumber}</h2>
-          <button type="button" onClick={goToNextRound} disabled={selectedRoundNumber === 8}>
-            &gt;
+
+        <div className="round-days">
+          {[1, 2].map((day) => (
+            <section className="admin-panel round-day" key={day}>
+              <div className="round-day__heading">
+                <h2>Dia {day}</h2>
+              </div>
+              <div className="round-slot-list">
+                {matchSlots.map((slot) => {
+                  const match = roundMatches.find((item) => item.day === day && item.slot === slot)
+                  const slotDraft = getSlotDraft(day, slot)
+
+                  return (
+                    <RoundSlot
+                      key={`${selectedRoundNumber}-${day}-${slot}`}
+                      day={day as 1 | 2}
+                      homeTeamId={slotDraft.homeTeamId}
+                      awayTeamId={slotDraft.awayTeamId}
+                      isRoundPublished={isPublished}
+                      match={match}
+                      slot={slot}
+                      teamMap={teamMap}
+                      teams={teams}
+                      onPublishScore={onPublishScore}
+                      onRealScoreChange={onRealScoreChange}
+                      onTeamChange={(field, value) => updateSlotDraft(day, slot, field, value)}
+                    />
+                  )
+                })}
+              </div>
+            </section>
+          ))}
+        </div>
+
+        <div className="round-actions">
+          <Button className="save-round-button" type="submit">Salvar rodada</Button>
+          <Button onClick={() => onPublishRound(selectedRoundNumber, activeDeadline)} variant="ghost">
+            Publicar rodada
+          </Button>
+          {roundExists ? (
+            <button className="danger-button" type="button" onClick={() => setDeleteConfirmOpen(true)}>
+              Apagar rodada
+            </button>
+          ) : null}
+        </div>
+      </form>
+
+      {deleteConfirmOpen ? (
+        <ConfirmDeleteRoundModal
+          matchCount={roundMatches.length}
+          roundNumber={selectedRoundNumber}
+          onCancel={() => setDeleteConfirmOpen(false)}
+          onConfirm={() => {
+            onDeleteRound(selectedRoundNumber)
+            setDeleteConfirmOpen(false)
+          }}
+        />
+      ) : null}
+    </>
+  )
+}
+
+function ConfirmDeleteRoundModal({
+  matchCount,
+  onCancel,
+  onConfirm,
+  roundNumber,
+}: {
+  matchCount: number
+  onCancel: () => void
+  onConfirm: () => void
+  roundNumber: number
+}) {
+  return (
+    <div className="confirm-overlay" role="presentation">
+      <div className="confirm-card" role="dialog" aria-modal="true" aria-labelledby="delete-round-title">
+        <span className="eyebrow">Confirmar exclusao</span>
+        <h2 id="delete-round-title">Apagar a Rodada {roundNumber}?</h2>
+        <p>
+          Isso apaga os {matchCount} jogo(s) da rodada e todos os palpites feitos neles. A tabela da fase
+          de liga e o ranking sao recalculados sem esses resultados. Nao da para desfazer.
+        </p>
+        <div className="confirm-actions">
+          <Button className="confirm-cancel-button" onClick={onCancel} variant="ghost">
+            Cancelar
+          </Button>
+          <button className="danger-button" type="button" onClick={onConfirm}>
+            Sim, apagar rodada
           </button>
         </div>
-        <label className="deadline-field">
-          Data e horario limite
-          <input
-            max="9999-12-31T23:59"
-            type="datetime-local"
-            value={activeDeadline}
-            onInput={(event) => {
-              event.currentTarget.value = normalizeDateTimeInput(event.currentTarget.value)
-            }}
-            onChange={(event) => updateDeadlineDraft(event.target.value)}
-          />
-        </label>
       </div>
-
-      <div className="round-days">
-        {[1, 2].map((day) => (
-          <section className="admin-panel round-day" key={day}>
-            <div className="round-day__heading">
-              <h2>Dia {day}</h2>
-            </div>
-            <div className="round-slot-list">
-              {matchSlots.map((slot) => {
-                const match = roundMatches.find((item) => item.day === day && item.slot === slot)
-                const slotDraft = getSlotDraft(day, slot)
-
-                return (
-                  <RoundSlot
-                    key={`${selectedRoundNumber}-${day}-${slot}`}
-                    day={day as 1 | 2}
-                    homeTeamId={slotDraft.homeTeamId}
-                    awayTeamId={slotDraft.awayTeamId}
-                    isRoundPublished={isPublished}
-                    match={match}
-                    slot={slot}
-                    teamMap={teamMap}
-                    teams={teams}
-                    onPublishScore={onPublishScore}
-                    onRealScoreChange={onRealScoreChange}
-                    onTeamChange={(field, value) => updateSlotDraft(day, slot, field, value)}
-                  />
-                )
-              })}
-            </div>
-          </section>
-        ))}
-      </div>
-
-      <div className="round-actions">
-        <Button className="save-round-button" type="submit">Salvar rodada</Button>
-        <Button onClick={() => onPublishRound(selectedRoundNumber, activeDeadline)} variant="ghost">
-          Publicar rodada
-        </Button>
-      </div>
-    </form>
+    </div>
   )
 }
 

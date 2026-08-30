@@ -1,23 +1,33 @@
-import type { FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Button } from '../../../components/Button'
 import type { CompetitionPredictionResult, Team } from '../../../types'
 import './CompetitionPredictionsPage.css'
 
 type CompetitionPredictionsPageProps = {
+  competitionPredictionDeadline?: Date | null
   competitionPredictionResult?: CompetitionPredictionResult
   onPublishCompetitionPredictionResult: () => void
+  onSaveCompetitionPredictionDeadline: (value: string) => void
   onSaveCompetitionPredictionResult: (event: FormEvent<HTMLFormElement>) => void
   teams: Team[]
 }
 
 export function CompetitionPredictionsPage({
+  competitionPredictionDeadline,
   competitionPredictionResult,
   onPublishCompetitionPredictionResult,
+  onSaveCompetitionPredictionDeadline,
   onSaveCompetitionPredictionResult,
   teams,
 }: CompetitionPredictionsPageProps) {
   return (
-    <form
+    <>
+      <DeadlineCard
+        deadline={competitionPredictionDeadline}
+        onSave={onSaveCompetitionPredictionDeadline}
+      />
+
+      <form
       className="admin-panel admin-competition-predictions"
       key={competitionPredictionResult?.id ?? 'empty'}
       onSubmit={onSaveCompetitionPredictionResult}
@@ -72,8 +82,63 @@ export function CompetitionPredictionsPage({
           {competitionPredictionResult?.published ? 'Pontuação publicada' : 'Publicar pontuação'}
         </Button>
       </div>
-    </form>
+      </form>
+    </>
   )
+}
+
+/**
+ * Prazo proprio das previsoes, separado das rodadas. Fica fora do form do
+ * resultado oficial para os dois nao serem salvos juntos.
+ */
+function DeadlineCard({
+  deadline,
+  onSave,
+}: {
+  deadline?: Date | null
+  onSave: (value: string) => void
+}) {
+  const [value, setValue] = useState(() => toDateTimeInput(deadline))
+
+  useEffect(() => {
+    setValue(toDateTimeInput(deadline))
+  }, [deadline])
+
+  return (
+    <section className="admin-panel admin-competition-deadline">
+      <div className="round-of-16-heading">
+        <span className="eyebrow">Prazo</span>
+        <h2>Prazo das previsões</h2>
+      </div>
+      <p className="muted-text">
+        Vale só para as previsões da competição — não tem relação com o prazo das rodadas. Enquanto não
+        houver prazo definido, ninguém consegue enviar.
+      </p>
+      <label className="deadline-field">
+        Data e horario limite
+        <input
+          max="9999-12-31T23:59"
+          type="datetime-local"
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+        />
+      </label>
+      <div className="round-actions">
+        <Button className="save-round-button" onClick={() => onSave(value)}>
+          Salvar prazo
+        </Button>
+      </div>
+    </section>
+  )
+}
+
+function toDateTimeInput(date?: Date | null) {
+  if (!date || Number.isNaN(date.getTime())) {
+    return ''
+  }
+
+  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+  return localDate.toISOString().slice(0, 16)
 }
 
 function AdminTopFive({

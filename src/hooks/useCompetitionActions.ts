@@ -29,6 +29,7 @@ type KnockoutLeg = 'home' | 'away'
 
 type UseCompetitionActionsProps = {
   currentUser: Player | null
+  competitionPredictionDeadline: Date | null
   competitionPredictionResult?: CompetitionPredictionResult
   competitionPredictions: CompetitionPrediction[]
   knockout: KnockoutTie[]
@@ -41,6 +42,7 @@ type UseCompetitionActionsProps = {
 
 export function useCompetitionActions({
   currentUser,
+  competitionPredictionDeadline,
   competitionPredictionResult,
   competitionPredictions,
   knockout,
@@ -130,9 +132,12 @@ export function useCompetitionActions({
       return
     }
 
-    const firstDeadline = getFirstRoundDeadline(rounds)
+    if (!competitionPredictionDeadline) {
+      setMessage('O admin ainda nao abriu o prazo das previsoes da competicao.')
+      return
+    }
 
-    if (!firstDeadline || new Date() >= firstDeadline) {
+    if (new Date() >= competitionPredictionDeadline) {
       setMessage('O prazo para enviar previsoes da competicao ja encerrou.')
       return
     }
@@ -218,6 +223,24 @@ export function useCompetitionActions({
       { merge: true },
     )
     setMessage('Resultado das previsoes salvo.')
+  }
+
+  /** Prazo proprio das previsoes da competicao, separado das rodadas. */
+  async function saveCompetitionPredictionDeadline(value: string) {
+    if (!value) {
+      setMessage('Defina a data e o horario limite das previsoes.')
+      return
+    }
+
+    await setDoc(
+      doc(db, 'competitions', competitionId, 'settings', 'competitionPredictions'),
+      {
+        deadline: Timestamp.fromDate(new Date(value)),
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true },
+    )
+    setMessage('Prazo das previsoes salvo.')
   }
 
   async function publishCompetitionPredictionResult() {
@@ -497,6 +520,37 @@ export function useCompetitionActions({
     )
 
     setMessage(`Rodada ${roundNumber} publicada.`)
+  }
+
+  /**
+   * Apaga a rodada inteira: os jogos, os palpites feitos neles e a propria rodada.
+   * A tabela da fase de liga e derivada dos jogos, entao ela se corrige sozinha.
+   */
+  async function deleteRound(roundNumber: number) {
+    const roundId = `round-${roundNumber}`
+    const roundMatches = matches.filter((match) => match.roundId === roundId)
+    const matchIds = new Set(roundMatches.map((match) => match.id))
+    const roundPredictions = predictions.filter((prediction) => matchIds.has(prediction.matchId))
+
+    const refs = [
+      ...roundPredictions.map((prediction) =>
+        doc(db, 'competitions', competitionId, 'predictions', prediction.id),
+      ),
+      ...roundMatches.map((match) => doc(db, 'competitions', competitionId, 'matches', match.id)),
+      doc(db, 'competitions', competitionId, 'rounds', roundId),
+    ]
+
+    // Um lote do Firestore aceita no maximo 500 operacoes.
+    for (let index = 0; index < refs.length; index += 400) {
+      const batch = writeBatch(db)
+      refs.slice(index, index + 400).forEach((ref) => batch.delete(ref))
+      await batch.commit()
+    }
+
+    setMessage(
+      `Rodada ${roundNumber} apagada (${roundMatches.length} jogo(s) e ${roundPredictions.length} palpite(s)).`,
+    )
+    await recalculateRanking()
   }
 
   async function updateRealScore(
@@ -905,7 +959,9 @@ export function useCompetitionActions({
     publishCompetitionPredictionResult,
     publishScore,
     publishRound,
+    deleteRound,
     publishKnockoutScore,
+    saveCompetitionPredictionDeadline,
     saveCompetitionPredictionResult,
     saveRound,
     saveRoundOf16,
@@ -970,11 +1026,6 @@ function getStageTies(knockout: KnockoutTie[], stage: string) {
 
 function getPredictionList(data: FormData, field: string) {
   return Array.from({ length: 5 }, (_, index) => String(data.get(`${field}-${index + 1}`) || '').trim())
-}
-
-function getFirstRoundDeadline(rounds: Round[]) {
-  return [...rounds].sort((a, b) => (a.number ?? 99) - (b.number ?? 99) || a.deadline.getTime() - b.deadline.getTime())[0]
-    ?.deadline
 }
 
 function hasDuplicateNames(values: string[]) {

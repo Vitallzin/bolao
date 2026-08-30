@@ -19,7 +19,7 @@
   border-radius: 9px;
   display: grid;
   gap: 8px;
-  grid-template-columns: minmax(110px, 1fr) 54px 16px 54px minmax(110px, 1fr);
+  grid-template-columns: minmax(0, 1fr) 54px 16px 54px minmax(0, 1fr);
   padding: 8px;
 }
 
@@ -62,10 +62,21 @@
 
 @media (max-width: 620px) {
   .knockout-prediction-row {
-    grid-template-columns: 1fr;
+    gap: 6px;
+    grid-template-columns: minmax(0, 1fr) 46px 10px 46px minmax(0, 1fr);
   }
 
-  .knockout-prediction-row > span {
+  /* Sigla e bandeira ja identificam o time no espaco curto do celular. */
+  .knockout-prediction-row .team-badge__name {
     display: none;
+  }
+
+  .knockout-prediction-row .team-badge {
+    gap: 6px;
+    justify-content: center;
+  }
+
+  .knockout-prediction-row .team-badge__chip {
+    min-width: 38px;
   }
 }

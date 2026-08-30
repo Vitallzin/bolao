@@ -17,6 +17,7 @@ export type KnockoutScoreField =
   | 'awayLegAwayScore'
 
 type AdminPageProps = {
+  competitionPredictionDeadline?: Date | null
   competitionPredictionResult?: CompetitionPredictionResult
   knockout: KnockoutTie[]
   matches: Match[]
@@ -32,9 +33,11 @@ type AdminPageProps = {
   onKnockoutScoreChange: (tieId: string, field: KnockoutScoreField, value: string) => void
   onKnockoutTeamSlotChange: (tieId: string, slot: 'home' | 'away', teamId: string) => void
   onPublishKnockoutScore: (tieId: string, leg?: 'home' | 'away') => void
+  onDeleteRound: (roundNumber: number) => void
   onPublishRound: (roundNumber: number, deadline: string) => void
   onPublishScore: (matchId: string) => void
   onPublishCompetitionPredictionResult: () => void
+  onSaveCompetitionPredictionDeadline: (value: string) => void
   onRealScoreChange: (matchId: string, side: 'realHomeScore' | 'realAwayScore', value: string) => void
   onSaveCompetitionPredictionResult: (event: FormEvent<HTMLFormElement>) => void
   onSaveRound: (
@@ -63,6 +66,7 @@ const adminSections: Array<{ id: AdminSection; label: string }> = [
 ]
 
 export function AdminPage({
+  competitionPredictionDeadline,
   competitionPredictionResult,
   knockout,
   matches,
@@ -78,9 +82,11 @@ export function AdminPage({
   onKnockoutScoreChange,
   onKnockoutTeamSlotChange,
   onPublishKnockoutScore,
+  onDeleteRound,
   onPublishRound,
   onPublishScore,
   onPublishCompetitionPredictionResult,
+  onSaveCompetitionPredictionDeadline,
   onRealScoreChange,
   onSaveCompetitionPredictionResult,
   onSaveRound,
@@ -137,6 +143,7 @@ export function AdminPage({
           rounds={rounds}
           teamMap={teamMap}
           teams={teams}
+          onDeleteRound={onDeleteRound}
           onPublishRound={onPublishRound}
           onPublishScore={onPublishScore}
           onRealScoreChange={onRealScoreChange}
@@ -173,9 +180,11 @@ export function AdminPage({
 
       {activeSection === 'competition-predictions' ? (
         <CompetitionPredictionsPage
+          competitionPredictionDeadline={competitionPredictionDeadline}
           competitionPredictionResult={competitionPredictionResult}
           teams={teams}
           onPublishCompetitionPredictionResult={onPublishCompetitionPredictionResult}
+          onSaveCompetitionPredictionDeadline={onSaveCompetitionPredictionDeadline}
           onSaveCompetitionPredictionResult={onSaveCompetitionPredictionResult}
         />
       ) : null}

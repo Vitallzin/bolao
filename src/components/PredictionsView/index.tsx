@@ -2,8 +2,18 @@ import { useEffect, useMemo, useState } from 'react'
 import { EmptyState } from '../EmptyState'
 import { TeamBadge } from '../TeamBadge'
 import { KnockoutPredictionCard } from '../../pages/DashboardPage/KnockoutPage/components/KnockoutPredictionCard'
-import type { KnockoutPrediction, KnockoutTie, Match, Player, Prediction, Round, Team } from '../../types'
+import type {
+  KnockoutPrediction,
+  KnockoutTie,
+  Match,
+  Player,
+  Prediction,
+  RankingEntry,
+  Round,
+  Team,
+} from '../../types'
 import { formatDateTime } from '../../utils/date'
+import { calculatePredictionPoints, getPointsTier, stagePointTables } from '../../utils/scoring'
 import './PredictionsView.css'
 
 type PredictionsViewProps = {
@@ -19,6 +29,7 @@ type PredictionsViewProps = {
   ) => void
   onPredictionChange: (matchId: string, side: 'homeScore' | 'awayScore', value: string) => void
   predictions: Prediction[]
+  ranking: RankingEntry[]
   rounds: Round[]
   teamMap: Map<string, Team>
 }
@@ -31,6 +42,7 @@ export function PredictionsView({
   onKnockoutPredictionChange,
   onPredictionChange,
   predictions,
+  ranking,
   rounds,
   teamMap,
 }: PredictionsViewProps) {
@@ -83,6 +95,7 @@ export function PredictionsView({
           currentUser={currentUser}
           matches={matches.filter((match) => match.roundId === activeStep.round.id)}
           predictions={predictions}
+          ranking={ranking}
           round={activeStep.round}
           teamMap={teamMap}
           onPredictionChange={onPredictionChange}
@@ -107,6 +120,7 @@ function RoundPredictions({
   matches,
   onPredictionChange,
   predictions,
+  ranking,
   round,
   teamMap,
 }: {
@@ -114,6 +128,7 @@ function RoundPredictions({
   matches: Match[]
   onPredictionChange: (matchId: string, side: 'homeScore' | 'awayScore', value: string) => void
   predictions: Prediction[]
+  ranking: RankingEntry[]
   round: Round
   teamMap: Map<string, Team>
 }) {
@@ -122,6 +137,8 @@ function RoundPredictions({
     day,
     matches: matches.filter((match) => match.day === day),
   }))
+  const hasResults = matches.some((match) => match.status === 'finished')
+  const roundSummary = hasResults ? getRoundSummary(ranking, currentUser.id, round.id) : null
 
   if (matches.length === 0) {
     return (
@@ -134,9 +151,26 @@ function RoundPredictions({
 
   return (
     <>
-      <span className={locked ? 'status-pill status-pill--locked' : 'status-pill'}>
-        {locked ? 'Fechada' : `Aberta ate ${formatDateTime(round.deadline)}`}
-      </span>
+      <div className="round-status-line">
+        <span className={locked ? 'status-pill status-pill--locked' : 'status-pill'}>
+          {locked ? 'Fechada' : `Aberta ate ${formatDateTime(round.deadline)}`}
+        </span>
+
+        {roundSummary ? (
+          <div className="round-score-summary">
+            <div className="round-score-summary__points">
+              <strong>{roundSummary.points}</strong>
+              <span>pts nessa rodada</span>
+            </div>
+            {roundSummary.position ? (
+              <div className="round-score-summary__position">
+                <strong>{roundSummary.position}º</strong>
+                <span>de {roundSummary.total} na rodada</span>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
       <div className="match-days">
         {matchesByDay.map(({ day, matches: dayMatches }) => (
           <section className="match-day" key={day}>
@@ -146,30 +180,57 @@ function RoundPredictions({
                 const prediction = predictions.find(
                   (item) => item.userId === currentUser.id && item.matchId === match.id,
                 )
+                const finished =
+                  match.status === 'finished' &&
+                  typeof match.realHomeScore === 'number' &&
+                  typeof match.realAwayScore === 'number'
+                const matchPoints = finished && prediction
+                  ? calculatePredictionPoints(prediction, match)
+                  : null
 
                 return (
                   <article className="match-row" key={match.id}>
                     <TeamBadge team={teamMap.get(match.homeTeamId)} />
-                    <input
-                      aria-label={`Palpite ${teamMap.get(match.homeTeamId)?.name}`}
-                      disabled={locked}
-                      min="0"
-                      placeholder="0"
-                      type="number"
-                      value={prediction?.homeScore ?? ''}
-                      onChange={(event) => onPredictionChange(match.id, 'homeScore', event.target.value)}
-                    />
+                    <div className="match-score-cell">
+                      <input
+                        aria-label={`Palpite ${teamMap.get(match.homeTeamId)?.name}`}
+                        disabled={locked}
+                        min="0"
+                        placeholder="0"
+                        type="number"
+                        value={prediction?.homeScore ?? ''}
+                        onChange={(event) => onPredictionChange(match.id, 'homeScore', event.target.value)}
+                      />
+                      {finished ? <small className="match-real-score">{match.realHomeScore}</small> : null}
+                    </div>
                     <span className="versus">x</span>
-                    <input
-                      aria-label={`Palpite ${teamMap.get(match.awayTeamId)?.name}`}
-                      disabled={locked}
-                      min="0"
-                      placeholder="0"
-                      type="number"
-                      value={prediction?.awayScore ?? ''}
-                      onChange={(event) => onPredictionChange(match.id, 'awayScore', event.target.value)}
-                    />
+                    <div className="match-score-cell">
+                      <input
+                        aria-label={`Palpite ${teamMap.get(match.awayTeamId)?.name}`}
+                        disabled={locked}
+                        min="0"
+                        placeholder="0"
+                        type="number"
+                        value={prediction?.awayScore ?? ''}
+                        onChange={(event) => onPredictionChange(match.id, 'awayScore', event.target.value)}
+                      />
+                      {finished ? <small className="match-real-score">{match.realAwayScore}</small> : null}
+                    </div>
                     <TeamBadge team={teamMap.get(match.awayTeamId)} align="right" />
+
+                    {matchPoints !== null ? (
+                      <span
+                        className={`match-points match-points--${getPointsTier(matchPoints, stagePointTables.early.exact)}`}
+                        title={
+                          matchPoints === stagePointTables.early.exact
+                            ? 'Placar exato!'
+                            : `${matchPoints} ponto(s) nesse jogo`
+                        }
+                      >
+                        {matchPoints === stagePointTables.early.exact ? 'Cravou! ' : ''}
+                        {matchPoints} pts
+                      </span>
+                    ) : null}
                   </article>
                 )
               })}
@@ -305,6 +366,25 @@ function buildPredictionSteps(rounds: Round[], knockout: KnockoutTie[]) {
       }))
       .filter((step) => step.ties.length > 0),
   ]
+}
+
+/**
+ * Pontos do jogador na rodada e a colocacao dele entre todos naquela rodada.
+ * Usa o ranking gravado pelo servidor, entao bate com o que os outros veem.
+ */
+function getRoundSummary(ranking: RankingEntry[], userId: string, roundId: string) {
+  const me = ranking.find((entry) => entry.userId === userId)
+
+  if (!me) {
+    return null
+  }
+
+  const points = me.roundPoints?.[roundId] ?? 0
+  const scores = ranking.map((entry) => entry.roundPoints?.[roundId] ?? 0)
+  // Empate divide a mesma colocacao: a posicao e quantos fizeram mais, +1.
+  const position = scores.filter((score) => score > points).length + 1
+
+  return { points, position, total: ranking.length }
 }
 
 function getStageTies(knockout: KnockoutTie[], stage: string) {

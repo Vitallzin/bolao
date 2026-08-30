@@ -3,10 +3,11 @@ import type { RankingEntry } from '../../types'
 import './RankingView.css'
 
 type RankingViewProps = {
+  lastScoredRoundId?: string | null
   ranking: RankingEntry[]
 }
 
-export function RankingView({ ranking }: RankingViewProps) {
+export function RankingView({ lastScoredRoundId, ranking }: RankingViewProps) {
   if (ranking.length === 0) {
     return (
       <EmptyState
@@ -27,22 +28,57 @@ export function RankingView({ ranking }: RankingViewProps) {
 
       <div className="ranking-list">
         {ranking.map((player, index) => {
-          const place = index + 1
+          const place = player.position ?? index + 1
           const positionClass = getPositionClassName(place)
+          const movement = getMovement(place, player.previousPosition)
+          const roundPoints = lastScoredRoundId ? player.roundPoints?.[lastScoredRoundId] ?? 0 : null
 
           return (
             <article className="ranking-row" key={player.userId}>
               <span className={positionClass}>{place}</span>
-              <div>
+
+              <div className="ranking-row__player">
                 <strong>{player.name}</strong>
+                {roundPoints !== null ? (
+                  <span className="ranking-row__round">+{roundPoints} na ultima rodada</span>
+                ) : null}
               </div>
-              <strong>{player.points} pts</strong>
+
+              {movement ? (
+                <span
+                  className={`ranking-move ranking-move--${movement.direction}`}
+                  title={
+                    movement.direction === 'up'
+                      ? `Subiu ${movement.places} posicao(oes)`
+                      : `Caiu ${movement.places} posicao(oes)`
+                  }
+                >
+                  {movement.direction === 'up' ? '▲' : '▼'} {movement.places}
+                </span>
+              ) : (
+                <span className="ranking-move ranking-move--same" title="Manteve a posicao">
+                  –
+                </span>
+              )}
+
+              <strong className="ranking-row__points">{player.points} pts</strong>
             </article>
           )
         })}
       </div>
     </section>
   )
+}
+
+/** Compara a posicao atual com a de antes da ultima rodada pontuada. */
+function getMovement(place: number, previousPosition: number | null) {
+  if (previousPosition === null || previousPosition === place) {
+    return null
+  }
+
+  return previousPosition > place
+    ? { direction: 'up' as const, places: previousPosition - place }
+    : { direction: 'down' as const, places: place - previousPosition }
 }
 
 function getPositionClassName(place: number) {

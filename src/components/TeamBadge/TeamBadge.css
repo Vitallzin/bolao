@@ -6,8 +6,17 @@
   min-width: 0;
 }
 
+/* Time visitante espelhado: nome, bandeira e sigla encostando na borda direita. */
 .team-badge--right {
-  justify-content: flex-end;
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
+/* Nome corta com reticencias em vez de quebrar linha e desalinhar as linhas. */
+.team-badge__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .team-badge--empty {
@@ -58,8 +67,3 @@
   min-width: 42px;
 }
 
-@media (max-width: 620px) {
-  .team-badge--right {
-    justify-content: flex-start;
-  }
-}

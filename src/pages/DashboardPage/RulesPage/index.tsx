@@ -73,7 +73,7 @@ export function RulesPage() {
       <article className="rules-card">
         <h3>Previsoes da competicao</h3>
         <p>
-          Sao enviadas <strong>uma unica vez</strong>, antes do prazo da primeira rodada, e so viram
+          Sao enviadas <strong>uma unica vez</strong>, ate o prazo proprio das previsoes, e so viram
           pontos quando o admin publica o resultado oficial no fim da competicao.
         </p>
 
@@ -115,8 +115,8 @@ export function RulesPage() {
             todos os jogos daquela fase, e o mesmo para a volta.
           </li>
           <li>
-            <strong>Previsoes da competicao</strong> — o prazo e o mesmo da primeira rodada. Depois
-            disso nao da para enviar nem alterar.
+            <strong>Previsoes da competicao</strong> — tem prazo proprio, independente das rodadas,
+            mostrado na aba Previsoes. Depois disso nao da para enviar nem alterar.
           </li>
         </ul>
         <p className="rules-note">

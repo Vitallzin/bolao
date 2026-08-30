@@ -30,6 +30,8 @@ export function useCompetitionData(authUser: User | null) {
   const [knockout, setKnockout] = useState<KnockoutTie[]>([])
   const [knockoutPredictions, setKnockoutPredictions] = useState<KnockoutPrediction[]>([])
   const [ranking, setRanking] = useState<RankingEntry[]>([])
+  const [lastScoredRoundId, setLastScoredRoundId] = useState<string | null>(null)
+  const [competitionPredictionDeadline, setCompetitionPredictionDeadline] = useState<Date | null>(null)
 
   useEffect(() => {
     if (!authUser) {
@@ -194,6 +196,12 @@ export function useCompetitionData(authUser: User | null) {
             : undefined,
         )
       }),
+      onSnapshot(collection(db, 'competitions', competitionId, 'settings'), (snapshot) => {
+        const settings = snapshot.docs.find((item) => item.id === 'competitionPredictions')
+        const deadline = settings?.data()?.deadline
+
+        setCompetitionPredictionDeadline(deadline ? toDate(deadline) : null)
+      }),
       onSnapshot(collection(db, 'competitions', competitionId, 'knockoutPredictions'), (snapshot) => {
         setKnockoutPredictions(
           snapshot.docs.map((item) => {
@@ -242,14 +250,21 @@ export function useCompetitionData(authUser: User | null) {
       onSnapshot(collection(db, 'competitions', competitionId, 'ranking'), (snapshot) => {
         const current = snapshot.docs.find((item) => item.id === 'current')
         const entries = current?.data()?.entries
+        const lastRound = current?.data()?.lastScoredRoundId
 
+        setLastScoredRoundId(typeof lastRound === 'string' ? lastRound : null)
         setRanking(
           Array.isArray(entries)
-            ? entries.map((entry) => ({
+            ? entries.map((entry, index) => ({
               userId: String(entry?.userId ?? ''),
               name: String(entry?.name ?? 'Jogador'),
               photoURL: typeof entry?.photoURL === 'string' ? entry.photoURL : null,
               points: Number(entry?.points ?? 0),
+              roundPoints:
+                entry?.roundPoints && typeof entry.roundPoints === 'object' ? entry.roundPoints : {},
+              position: typeof entry?.position === 'number' ? entry.position : index + 1,
+              previousPosition:
+                typeof entry?.previousPosition === 'number' ? entry.previousPosition : null,
             }))
             : [],
         )
@@ -260,10 +275,12 @@ export function useCompetitionData(authUser: User | null) {
   }, [authUser])
 
   return {
+    competitionPredictionDeadline,
     competitionPredictionResult,
     competitionPredictions,
     knockout,
     knockoutPredictions,
+    lastScoredRoundId,
     matches,
     players,
     playerStats,

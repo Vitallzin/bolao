@@ -41,9 +41,13 @@ service cloud.firestore {
         : request.time < tieData.data.awayLegDeadline;
     }
 
+    // A previsao da competicao tem prazo proprio, independente das rodadas.
+    // Sem prazo definido pelo admin, ninguem envia.
     function beforeCompetitionPredictionDeadline(competitionId) {
-      let firstRound = get(/databases/$(database)/documents/competitions/$(competitionId)/rounds/round-1);
-      return request.time < firstRound.data.deadline;
+      let settings = /databases/$(database)/documents/competitions/$(competitionId)/settings/competitionPredictions;
+      return exists(settings)
+        && get(settings).data.deadline != null
+        && request.time < get(settings).data.deadline;
     }
 
     match /users/{userId} {
@@ -78,6 +82,12 @@ service cloud.firestore {
       }
 
       match /rounds/{roundId} {
+        allow read: if signedIn();
+        allow write: if isAdmin();
+      }
+
+      // Configuracoes da competicao (ex: prazo das previsoes).
+      match /settings/{settingId} {
         allow read: if signedIn();
         allow write: if isAdmin();
       }

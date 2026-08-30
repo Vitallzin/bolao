@@ -10,7 +10,7 @@ import type {
   Match,
   Prediction,
 } from '../src/types'
-import { calculatePlayerPoints } from '../src/utils/scoring'
+import { calculatePlayerPoints, calculatePointsByRound, getLastScoredRoundId } from '../src/utils/scoring'
 
 const COMPETITION_ID = process.env.COMPETITION_ID || 'champions-2026'
 
@@ -85,19 +85,49 @@ async function recalculateRanking() {
     predictions: mapDocs<Prediction>(predictionsSnap),
   }
 
-  const entries = usersSnap.docs
+  const lastScoredRoundId = getLastScoredRoundId(input.matches)
+
+  const scored = usersSnap.docs
     .map((item) => ({ id: item.id, ...item.data() } as Record<string, unknown> & { id: string }))
     .filter((user) => user.approved === true || user.role === 'admin')
-    .map((user) => ({
-      name: String(user.name ?? 'Jogador'),
-      photoURL: typeof user.photoURL === 'string' ? user.photoURL : null,
-      points: calculatePlayerPoints(user.id, input),
-      userId: user.id,
+    .map((user) => {
+      const roundPoints = calculatePointsByRound(user.id, input)
+      const points = calculatePlayerPoints(user.id, input)
+
+      return {
+        name: String(user.name ?? 'Jogador'),
+        photoURL: typeof user.photoURL === 'string' ? user.photoURL : null,
+        points,
+        // Pontuacao desconsiderando a ultima rodada, para saber de onde o jogador veio.
+        pointsBeforeLastRound: points - (lastScoredRoundId ? roundPoints[lastScoredRoundId] ?? 0 : 0),
+        roundPoints,
+        userId: user.id,
+      }
+    })
+
+  const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name)
+  const previousPositions = new Map(
+    [...scored]
+      .sort((a, b) => b.pointsBeforeLastRound - a.pointsBeforeLastRound || byName(a, b))
+      .map((entry, index) => [entry.userId, index + 1] as const),
+  )
+
+  const entries = [...scored]
+    .sort((a, b) => b.points - a.points || byName(a, b))
+    .map((entry, index) => ({
+      name: entry.name,
+      photoURL: entry.photoURL,
+      points: entry.points,
+      position: index + 1,
+      // Sem rodada pontuada ainda, nao existe "posicao anterior" para comparar.
+      previousPosition: lastScoredRoundId ? previousPositions.get(entry.userId) ?? null : null,
+      roundPoints: entry.roundPoints,
+      userId: entry.userId,
     }))
-    .sort((a, b) => b.points - a.points || a.name.localeCompare(b.name))
 
   await competition.collection('ranking').doc('current').set({
     entries,
+    lastScoredRoundId,
     updatedAt: Timestamp.now(),
   })
 

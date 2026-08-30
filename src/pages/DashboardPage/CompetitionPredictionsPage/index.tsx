@@ -1,37 +1,40 @@
 import type { FormEvent } from 'react'
 import { Button } from '../../../components/Button'
 import { EmptyState } from '../../../components/EmptyState'
-import type { CompetitionPrediction, CompetitionPredictionResult, Player, Round, Team } from '../../../types'
+import type { CompetitionPrediction, CompetitionPredictionResult, Player, Team } from '../../../types'
 import { formatDateTime } from '../../../utils/date'
 import './CompetitionPredictionsPage.css'
 
 type CompetitionPredictionsPageProps = {
+  competitionPredictionDeadline?: Date | null
   competitionPredictionResult?: CompetitionPredictionResult
   competitionPredictions: CompetitionPrediction[]
   currentUser: Player
-  firstRound?: Round
   onSubmitCompetitionPrediction: (event: FormEvent<HTMLFormElement>) => void
   teamMap: Map<string, Team>
   teams: Team[]
 }
 
 export function CompetitionPredictionsPage({
+  competitionPredictionDeadline,
   competitionPredictionResult,
   competitionPredictions,
   currentUser,
-  firstRound,
   onSubmitCompetitionPrediction,
   teamMap,
   teams,
 }: CompetitionPredictionsPageProps) {
   const existingPrediction = competitionPredictions.find((prediction) => prediction.userId === currentUser.id)
-  const locked = Boolean(existingPrediction) || !firstRound || new Date() >= firstRound.deadline
+  const deadlinePassed = Boolean(
+    competitionPredictionDeadline && new Date() >= competitionPredictionDeadline,
+  )
+  const locked = Boolean(existingPrediction) || !competitionPredictionDeadline || deadlinePassed
 
-  if (!firstRound) {
+  if (!competitionPredictionDeadline) {
     return (
       <EmptyState
         title="Previsões indisponíveis"
-        text="Quando a primeira rodada tiver uma data limite, as previsões da competição aparecem aqui."
+        text="O admin ainda não abriu o prazo das previsões da competição."
       />
     )
   }
@@ -44,7 +47,11 @@ export function CompetitionPredictionsPage({
           <h2>Previsões da competição</h2>
         </div>
         <span className={locked ? 'status-pill status-pill--locked' : 'status-pill'}>
-          {existingPrediction ? 'Enviada' : new Date() >= firstRound.deadline ? 'Fechada' : `Aberta ate ${formatDateTime(firstRound.deadline)}`}
+          {existingPrediction
+            ? 'Enviada'
+            : deadlinePassed
+              ? 'Fechada'
+              : `Aberta ate ${formatDateTime(competitionPredictionDeadline)}`}
         </span>
       </div>
 

@@ -33,10 +33,12 @@ function App() {
     setMessage,
   } = useAuthProfile()
   const {
+    competitionPredictionDeadline,
     competitionPredictionResult,
     competitionPredictions,
     knockout,
     knockoutPredictions,
+    lastScoredRoundId,
     matches,
     playerStats,
     players,
@@ -58,6 +60,7 @@ function App() {
   const standings = useMemo(() => buildStandings(teams, matches), [matches, teams])
 
   const actions = useCompetitionActions({
+    competitionPredictionDeadline,
     competitionPredictionResult,
     competitionPredictions,
     currentUser,
@@ -175,11 +178,13 @@ function App() {
       adminMode={adminMode}
       authProvider={authProvider}
       currentUser={currentUser}
+      competitionPredictionDeadline={competitionPredictionDeadline}
       competitionPredictionResult={competitionPredictionResult}
       competitionPredictions={competitionPredictions}
       isAdmin={isAdmin}
       knockout={knockout}
       knockoutPredictions={knockoutPredictions}
+      lastScoredRoundId={lastScoredRoundId}
       matches={matches}
       message={message}
       messageId={messageId}
@@ -209,6 +214,7 @@ function App() {
       onProfileNameUpdate={handleProfileNameUpdate}
       onPredictionChange={actions.handlePrediction}
       onPublishKnockoutScore={actions.publishKnockoutScore}
+      onDeleteRound={actions.deleteRound}
       onPublishRound={actions.publishRound}
       onPublishScore={actions.publishScore}
       onRealScoreChange={actions.updateRealScore}
@@ -217,6 +223,7 @@ function App() {
       onToggleAdminMode={toggleAdminMode}
       onKnockoutTeamSlotChange={actions.updateKnockoutTeamSlot}
       onPublishCompetitionPredictionResult={actions.publishCompetitionPredictionResult}
+      onSaveCompetitionPredictionDeadline={actions.saveCompetitionPredictionDeadline}
       onSaveCompetitionPredictionResult={actions.saveCompetitionPredictionResult}
       onSubmitCompetitionPrediction={actions.submitCompetitionPrediction}
       onUpdatePlayerStat={actions.updatePlayerStat}

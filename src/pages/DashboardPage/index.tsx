@@ -32,11 +32,13 @@ type DashboardPageProps = {
   activeView: View
   adminMode: boolean
   authProvider: 'google' | 'password'
+  competitionPredictionDeadline?: Date | null
   competitionPredictionResult?: CompetitionPredictionResult
   competitionPredictions: CompetitionPrediction[]
   isAdmin: boolean
   knockout: KnockoutTie[]
   knockoutPredictions: KnockoutPrediction[]
+  lastScoredRoundId?: string | null
   matches: Match[]
   message: string
   messageId: number
@@ -66,7 +68,9 @@ type DashboardPageProps = {
   onProfileNameUpdate: (name: string) => Promise<void>
   onPredictionChange: (matchId: string, side: 'homeScore' | 'awayScore', value: string) => void
   onPublishCompetitionPredictionResult: () => void
+  onSaveCompetitionPredictionDeadline: (value: string) => void
   onPublishKnockoutScore: (tieId: string, leg?: 'home' | 'away') => void
+  onDeleteRound: (roundNumber: number) => void
   onPublishRound: (roundNumber: number, deadline: string) => void
   onPublishScore: (matchId: string) => void
   onRealScoreChange: (matchId: string, side: 'realHomeScore' | 'realAwayScore', value: string) => void
@@ -100,12 +104,14 @@ export function DashboardPage({
   activeView,
   adminMode,
   authProvider,
+  competitionPredictionDeadline,
   competitionPredictionResult,
   competitionPredictions,
   currentUser,
   isAdmin,
   knockout,
   knockoutPredictions,
+  lastScoredRoundId,
   matches,
   message,
   messageId,
@@ -126,7 +132,9 @@ export function DashboardPage({
   onProfileNameUpdate,
   onPredictionChange,
   onPublishCompetitionPredictionResult,
+  onSaveCompetitionPredictionDeadline,
   onPublishKnockoutScore,
+  onDeleteRound,
   onPublishRound,
   onPublishScore,
   onRealScoreChange,
@@ -190,6 +198,7 @@ export function DashboardPage({
 
       {adminMode && isAdmin ? (
         <AdminPage
+          competitionPredictionDeadline={competitionPredictionDeadline}
           competitionPredictionResult={competitionPredictionResult}
           matches={matches}
           knockout={knockout}
@@ -209,7 +218,9 @@ export function DashboardPage({
           onKnockoutScoreChange={onKnockoutScoreChange}
           onKnockoutLegDeadlineChange={onKnockoutLegDeadlineChange}
           onPublishCompetitionPredictionResult={onPublishCompetitionPredictionResult}
+          onSaveCompetitionPredictionDeadline={onSaveCompetitionPredictionDeadline}
           onPublishKnockoutScore={onPublishKnockoutScore}
+          onDeleteRound={onDeleteRound}
           onPublishRound={onPublishRound}
           onPublishScore={onPublishScore}
           onRealScoreChange={onRealScoreChange}
@@ -231,6 +242,7 @@ export function DashboardPage({
             knockoutPredictions={knockoutPredictions}
             matches={matches}
             predictions={predictions}
+            ranking={ranking}
             rounds={publishedRounds}
             teamMap={teamMap}
             onKnockoutPredictionChange={onKnockoutPredictionChange}
@@ -247,7 +259,7 @@ export function DashboardPage({
             competitionPredictionResult={competitionPredictionResult}
             competitionPredictions={competitionPredictions}
             currentUser={currentUser}
-            firstRound={publishedRounds[0] ?? rounds[0]}
+            competitionPredictionDeadline={competitionPredictionDeadline}
             teamMap={teamMap}
             teams={teams}
             onSubmitCompetitionPrediction={onSubmitCompetitionPrediction}
@@ -257,7 +269,7 @@ export function DashboardPage({
         )
       ) : null}
 
-      {!adminMode && activeView === 'ranking' ? <RankingPage ranking={ranking} /> : null}
+      {!adminMode && activeView === 'ranking' ? <RankingPage lastScoredRoundId={lastScoredRoundId} ranking={ranking} /> : null}
 
       {!adminMode && activeView === 'champions' ? (
         <ChampionsPage standings={standings} />

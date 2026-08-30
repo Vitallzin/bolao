@@ -28,6 +28,70 @@ export function isKnockoutLegPublished(tie: KnockoutTie, leg: 'home' | 'away') {
     : Boolean(tie.awayLegScorePublished || tie.scorePublished)
 }
 
+/** Pontos que o jogador fez em cada rodada, so contando jogos ja encerrados. */
+export function calculatePointsByRound(
+  userId: string,
+  input: Pick<PlayerPointsInput, 'matches' | 'predictions'>,
+) {
+  const byRound: Record<string, number> = {}
+
+  input.predictions.forEach((prediction) => {
+    if (prediction.userId !== userId) {
+      return
+    }
+
+    const match = input.matches.find((item) => item.id === prediction.matchId)
+
+    if (!match || match.status !== 'finished') {
+      return
+    }
+
+    byRound[match.roundId] = (byRound[match.roundId] ?? 0) + calculatePredictionPoints(prediction, match)
+  })
+
+  return byRound
+}
+
+/** Ultima rodada que ja teve pelo menos um placar publicado. Base para a variacao do ranking. */
+export function getLastScoredRoundId(matches: Match[]) {
+  const finished = matches.filter((match) => match.status === 'finished')
+
+  if (finished.length === 0) {
+    return null
+  }
+
+  return finished.reduce((best, match) =>
+    (match.roundNumber ?? 0) > (best.roundNumber ?? 0) ? match : best,
+  ).roundId
+}
+
+/** Faixa de cor do placar: do verde (cravou) ao vermelho (zerou). */
+export function getPointsTier(points: number, maxPoints: number) {
+  if (points <= 0) {
+    return 'zero'
+  }
+
+  const ratio = maxPoints > 0 ? points / maxPoints : 0
+
+  if (ratio >= 1) {
+    return 'exact'
+  }
+
+  if (ratio >= 0.6) {
+    return 'great'
+  }
+
+  if (ratio >= 0.35) {
+    return 'good'
+  }
+
+  if (ratio >= 0.2) {
+    return 'ok'
+  }
+
+  return 'low'
+}
+
 /**
  * Pontuacao total de um jogador. E a fonte unica de verdade do ranking:
  * roda no servidor (api/recalculate-ranking) e o resultado e gravado no Firestore.

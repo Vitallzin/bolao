@@ -99,6 +99,11 @@ export type RankingEntry = {
   name: string
   photoURL?: string | null
   points: number
+  /** Pontos por rodada (roundId -> pontos), so de jogos ja encerrados. */
+  roundPoints: Record<string, number>
+  position: number
+  /** Posicao antes da ultima rodada pontuada. Null quando ainda nao ha rodada anterior. */
+  previousPosition: number | null
 }
 
 export type NotificationPreferences = {

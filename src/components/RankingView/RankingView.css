@@ -11,8 +11,48 @@
   box-shadow: 0 16px 44px rgba(0, 0, 0, 0.22);
   display: grid;
   gap: 14px;
-  grid-template-columns: 44px 1fr auto;
+  grid-template-columns: 44px minmax(0, 1fr) auto auto;
   padding: 14px 16px;
+}
+
+.ranking-row__player {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ranking-row__round {
+  color: #9becff !important;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.ranking-row__points {
+  white-space: nowrap;
+}
+
+/* Variacao de posicao em relacao a rodada anterior. */
+.ranking-move {
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 850;
+  padding: 4px 9px;
+  white-space: nowrap;
+}
+
+.ranking-move--up {
+  background: rgba(34, 197, 94, 0.18);
+  color: #7bf1a8;
+}
+
+.ranking-move--down {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fca5a5;
+}
+
+.ranking-move--same {
+  background: rgba(226, 242, 255, 0.08);
+  color: var(--app-muted);
 }
 
 .ranking-row div {
@@ -51,4 +91,23 @@
   background: linear-gradient(160deg, #f0c6a0, #b3701f 55%, #7a4a10) !important;
   box-shadow: 0 0 18px rgba(179, 112, 31, 0.4);
   color: #3a2200 !important;
+}
+
+@media (max-width: 620px) {
+  .ranking-row {
+    gap: 10px;
+    grid-template-columns: 38px minmax(0, 1fr) auto;
+    padding: 12px;
+  }
+
+  /* Em tela estreita a seta desce junto com os pontos. */
+  .ranking-move {
+    grid-column: 3;
+    justify-self: end;
+  }
+
+  .ranking-row__points {
+    grid-column: 2 / -1;
+    justify-self: end;
+  }
 }

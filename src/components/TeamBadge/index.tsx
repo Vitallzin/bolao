@@ -31,7 +31,7 @@ export function TeamBadge({ align = 'left', rank, team }: TeamBadgeProps) {
         </span>
       )}
       <img alt="" height="24" loading="lazy" src={flagUrl} width="24" />
-      <span>{team.name}</span>
+      <span className="team-badge__name">{team.name}</span>
     </span>
   )
 }
