@@ -215,7 +215,6 @@ function App() {
       onPredictionChange={actions.handlePrediction}
       onPublishKnockoutScore={actions.publishKnockoutScore}
       onDeleteRound={actions.deleteRound}
-      onRecalculateRanking={actions.recalculateRanking}
       onPublishRound={actions.publishRound}
       onPublishScore={actions.publishScore}
       onRealScoreChange={actions.updateRealScore}

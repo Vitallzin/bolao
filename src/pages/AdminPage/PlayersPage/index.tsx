@@ -6,7 +6,6 @@ import './PlayersPage.css'
 type PlayersPageProps = {
   onApproveUser: (userId: string, approved: boolean) => void
   onDeletePlayer: (userId: string) => void
-  onRecalculateRanking: () => Promise<string | null>
   players: Player[]
 }
 
@@ -18,30 +17,10 @@ type PendingRoleChange = {
 export function PlayersPage({
   onApproveUser,
   onDeletePlayer,
-  onRecalculateRanking,
   players,
 }: PlayersPageProps) {
   const [pendingChange, setPendingChange] = useState<PendingRoleChange | null>(null)
   const [playerToRemove, setPlayerToRemove] = useState<Player | null>(null)
-  const [rankingStatus, setRankingStatus] = useState<{ error: boolean; text: string } | null>(null)
-  const [recalculating, setRecalculating] = useState(false)
-
-  async function handleRecalculate() {
-    setRecalculating(true)
-    setRankingStatus(null)
-
-    try {
-      const failure = await onRecalculateRanking()
-
-      setRankingStatus(
-        failure
-          ? { error: true, text: failure }
-          : { error: false, text: 'Ranking recalculado com sucesso.' },
-      )
-    } finally {
-      setRecalculating(false)
-    }
-  }
   const orderedPlayers = [...players].sort(
     (a, b) => Number(a.approved) - Number(b.approved) || a.name.localeCompare(b.name),
   )
@@ -64,20 +43,6 @@ export function PlayersPage({
           ? `${visitorCount} pessoa(s) como visitante ainda. Visitante so consegue ver o site; jogador tambem envia palpites e aparece no ranking.`
           : 'Todo mundo que entrou ja esta como jogador ou e admin.'}
       </p>
-
-      {/* O ranking e calculado no servidor. Se ficar desatualizado, da para forcar aqui. */}
-      <div className="players-admin__actions">
-        <Button disabled={recalculating} onClick={handleRecalculate} variant="ghost">
-          {recalculating ? 'Recalculando...' : 'Recalcular ranking'}
-        </Button>
-      </div>
-
-      {/* Fica fixo na tela (o toast some rapido demais para ler um erro tecnico). */}
-      {rankingStatus ? (
-        <p className={rankingStatus.error ? 'ranking-status ranking-status--error' : 'ranking-status'}>
-          {rankingStatus.text}
-        </p>
-      ) : null}
 
       {orderedPlayers.length === 0 ? (
         <p className="muted-text">Ninguem entrou no site ainda.</p>
