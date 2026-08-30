@@ -32,6 +32,7 @@ export function useCompetitionData(authUser: User | null) {
   const [ranking, setRanking] = useState<RankingEntry[]>([])
   const [lastScoredRoundId, setLastScoredRoundId] = useState<string | null>(null)
   const [competitionPredictionDeadline, setCompetitionPredictionDeadline] = useState<Date | null>(null)
+  const [rankingLoaded, setRankingLoaded] = useState(false)
 
   useEffect(() => {
     if (!authUser) {
@@ -253,6 +254,7 @@ export function useCompetitionData(authUser: User | null) {
         const lastRound = current?.data()?.lastScoredRoundId
 
         setLastScoredRoundId(typeof lastRound === 'string' ? lastRound : null)
+        setRankingLoaded(true)
         setRanking(
           Array.isArray(entries)
             ? entries.map((entry, index) => ({
@@ -286,6 +288,7 @@ export function useCompetitionData(authUser: User | null) {
     playerStats,
     predictions,
     ranking,
+    rankingLoaded,
     rounds,
     teams,
   }

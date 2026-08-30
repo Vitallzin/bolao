@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { deleteUser } from 'firebase/auth'
 import { doc, writeBatch } from 'firebase/firestore'
 import { DashboardPage } from './pages/DashboardPage'
@@ -44,9 +44,11 @@ function App() {
     players,
     predictions,
     ranking,
+    rankingLoaded,
     rounds,
     teams,
   } = useCompetitionData(authUser)
+  const rankingRepairedRef = useRef(false)
   const [activeView, setActiveView] = useState<View>('palpites')
   const [adminMode, setAdminMode] = useState(false)
 
@@ -86,6 +88,25 @@ function App() {
       })
     }
   }, [authUser, players, setCurrentUser])
+
+  /**
+   * O recalculo dispara nas publicacoes do admin. Se o ranking nunca chegou a ser
+   * gravado (conta nova, ou placares publicados antes do recalculo existir), ele
+   * ficaria zerado para sempre — entao o admin reconstroi uma vez ao abrir o site.
+   */
+  useEffect(() => {
+    if (!isAdmin || !rankingLoaded || ranking.length > 0 || rankingRepairedRef.current) {
+      return
+    }
+
+    rankingRepairedRef.current = true
+
+    void actions.recalculateRanking().then((failure) => {
+      if (failure) {
+        setMessage(`Nao consegui montar o ranking: ${failure}`)
+      }
+    })
+  }, [actions, isAdmin, ranking.length, rankingLoaded, setMessage])
 
   async function logout() {
     await handleLogout()

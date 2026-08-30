@@ -93,12 +93,17 @@ VITE_FIREBASE_MEASUREMENT_ID=
 No Firebase Console, ative **Authentication → Sign-in method** para Google e Email/Password, e publique
 as regras em [`firestore.rules`](firestore.rules).
 
+O servidor do Vite não executa as funções de `api/` — elas só rodam na Vercel. Por isso o `vite.config.ts`
+encaminha `/api` para o site publicado durante o desenvolvimento (mesmo projeto Firebase que o localhost
+já usa). Para apontar para outro ambiente, defina `VITE_API_PROXY_TARGET` no `.env.local`.
+
 | Comando | Descrição |
 | --- | --- |
 | `npm run dev` | Ambiente de desenvolvimento com hot reload |
 | `npm run build` | Checagem de tipos (`tsc -b`) e build de produção |
 | `npm run preview` | Serve o build de produção localmente |
 | `npm run lint` | Lint com oxlint |
+| `npm run check:pontuacao` | Confere se a pontuação do app e a do servidor batem |
 
 ## Estrutura
 
