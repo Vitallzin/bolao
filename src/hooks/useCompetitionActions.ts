@@ -323,11 +323,19 @@ export function useCompetitionActions({
         method: 'POST',
       })
 
-      if (!response.ok) {
-        setMessage('Publicado, mas o ranking nao atualizou. Recalcule de novo em instantes.')
+      if (response.ok) {
+        return
       }
-    } catch {
-      setMessage('Publicado, mas o ranking nao atualizou. Recalcule de novo em instantes.')
+
+      // Mostra o motivo real: 404 = funcao nao publicada, 403 = nao e admin, 500 = erro no servidor.
+      const detail = await response.text().catch(() => '')
+      const serverMessage = detail.startsWith('{')
+        ? (JSON.parse(detail) as { error?: string }).error
+        : detail.slice(0, 120)
+
+      setMessage(`Ranking nao atualizou (HTTP ${response.status}): ${serverMessage || 'sem detalhe'}`)
+    } catch (error) {
+      setMessage(`Ranking nao atualizou: ${error instanceof Error ? error.message : 'falha de rede'}`)
     }
   }
 

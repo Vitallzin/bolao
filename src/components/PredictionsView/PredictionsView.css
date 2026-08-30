@@ -43,21 +43,21 @@
 }
 
 .match-scores {
-  align-items: end;
+  align-items: center;
   display: flex;
-  gap: 10px;
+  gap: 12px;
   justify-content: center;
 }
 
 .score-group {
   display: grid;
-  gap: 4px;
+  gap: 5px;
   justify-items: center;
 }
 
 .score-group__label {
   color: var(--app-muted);
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   font-weight: 850;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -70,37 +70,41 @@
   gap: 6px;
 }
 
-/* Placar real: mesmo tamanho do palpite, mas so leitura. */
+/* Palpite e placar real usam a mesma caixa, para ficarem alinhados.
+   Largura fixa: dentro de flex, width 100% deforma as caixas. */
+.match-row .score-group__values input,
 .score-box {
-  align-items: center;
-  background: rgba(226, 242, 255, 0.06);
-  border: 1px solid rgba(186, 230, 253, 0.14);
-  border-radius: 8px;
-  color: var(--app-muted);
-  display: inline-flex;
-  font-weight: 850;
-  justify-content: center;
-  min-height: 42px;
-  min-width: 42px;
-}
-
-/* Separador entre palpite e placar real. */
-.score-group--real {
-  border-left: 1px solid var(--app-line);
-  padding-left: 10px;
-}
-
-.match-row input {
-  background: rgba(226, 242, 255, 0.1);
-  border: 1px solid rgba(186, 230, 253, 0.18);
   border-radius: 8px;
   box-sizing: border-box;
+  flex: 0 0 auto;
+  font-weight: 850;
+  height: 44px;
+  padding: 0;
+  text-align: center;
+  width: 46px;
+}
+
+.match-row .score-group__values input {
+  background: rgba(226, 242, 255, 0.1);
+  border: 1px solid rgba(186, 230, 253, 0.18);
   color: var(--app-title);
   font: inherit;
-  min-height: 42px;
-  padding: 8px 10px;
-  text-align: center;
-  width: 100%;
+  font-weight: 850;
+}
+
+.score-box {
+  align-items: center;
+  background: rgba(226, 242, 255, 0.05);
+  border: 1px dashed rgba(186, 230, 253, 0.22);
+  color: var(--app-muted);
+  display: inline-flex;
+  justify-content: center;
+}
+
+/* Separador entre o palpite e o placar real. */
+.score-group--real {
+  border-left: 1px solid var(--app-line);
+  padding-left: 12px;
 }
 
 .round-status-line {
@@ -332,7 +336,7 @@
 }
 
 @media (max-width: 620px) {
-  /* Legenda e placares empilham para caber. */
+  /* Legenda em coluna unica. */
   .points-legend {
     gap: 12px;
     grid-template-columns: 1fr;
@@ -345,42 +349,29 @@
     padding-top: 12px;
   }
 
-  .match-scores {
-    gap: 8px;
-  }
-
-  .score-group--real {
-    padding-left: 8px;
-  }
-
-  .score-box {
-    min-height: 40px;
-    min-width: 34px;
-  }
-
-  .score-group__label {
-    font-size: 0.56rem;
-  }
-
+  /* Times em cima lado a lado, placares e pontos embaixo:
+     numa linha so nao cabe sem espremer tudo. */
   .match-row {
-    gap: 8px;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-    padding: 10px 8px;
+    gap: 10px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    padding: 12px 10px;
   }
 
-  .match-row input {
-    min-height: 44px;
-    padding: 8px 2px;
+  .match-scores,
+  .match-points {
+    grid-column: 1 / -1;
   }
 
-  /* Espaco curto demais para o nome inteiro: sigla e bandeira ja identificam o time. */
-  .match-row .team-badge__name {
-    display: none;
+  .match-scores {
+    gap: 10px;
   }
 
   .match-row .team-badge {
     gap: 6px;
-    justify-content: center;
+  }
+
+  .match-row .team-badge__name {
+    font-size: 0.8rem;
   }
 
   .match-row .team-badge__chip {
