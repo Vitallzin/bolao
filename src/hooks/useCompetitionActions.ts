@@ -254,7 +254,7 @@ export function useCompetitionActions({
       publishedAt: serverTimestamp(),
     })
     setMessage('Pontuacao das previsoes publicada no ranking.')
-    await recalculateRanking()
+    await recalculateRankingAfterPublish()
   }
 
   async function addTeam(event: FormEvent<HTMLFormElement>) {
@@ -310,10 +310,20 @@ export function useCompetitionActions({
   /**
    * O ranking e calculado no servidor e gravado no Firestore. Toda acao do admin que
    * muda a pontuacao precisa pedir o recalculo, senao o ranking fica desatualizado.
+   * Usado apos publicacoes, onde so existe o toast para avisar.
    */
-  async function recalculateRanking() {
+  async function recalculateRankingAfterPublish() {
+    const failure = await recalculateRanking()
+
+    if (failure) {
+      setMessage(`Ranking nao atualizou: ${failure}`)
+    }
+  }
+
+  /** Devolve null quando deu certo, ou o motivo da falha para ser exibido na tela. */
+  async function recalculateRanking(): Promise<string | null> {
     if (!auth.currentUser) {
-      return
+      return 'Entre de novo para recalcular o ranking.'
     }
 
     try {
@@ -324,25 +334,29 @@ export function useCompetitionActions({
       })
 
       if (response.ok) {
-        return
+        return null
       }
 
-      // Mostra o motivo real: 404 = funcao nao publicada, 403 = nao e admin, 500 = erro no servidor.
-      const detail = await response.text().catch(() => '')
-      const serverMessage = detail.startsWith('{')
-        ? (JSON.parse(detail) as { error?: string }).error
-        : detail.slice(0, 120)
+      // 404 = funcao nao publicada (normal no localhost), 403 = nao e admin, 500 = erro no servidor.
+      const body = await response.text().catch(() => '')
+      let detail = body.slice(0, 400)
 
-      setMessage(`Ranking nao atualizou (HTTP ${response.status}): ${serverMessage || 'sem detalhe'}`)
+      try {
+        detail = (JSON.parse(body) as { error?: string }).error ?? detail
+      } catch {
+        // Resposta nao e JSON (ex: pagina de erro da Vercel): usamos o texto cru.
+      }
+
+      return `HTTP ${response.status} — ${detail || 'sem detalhe'}`
     } catch (error) {
-      setMessage(`Ranking nao atualizou: ${error instanceof Error ? error.message : 'falha de rede'}`)
+      return error instanceof Error ? error.message : 'falha de rede'
     }
   }
 
   async function approveUser(userId: string, approved: boolean) {
     await updateDoc(doc(db, 'users', userId), { approved })
     setMessage(approved ? 'Agora e jogador.' : 'Agora e visitante.')
-    await recalculateRanking()
+    await recalculateRankingAfterPublish()
   }
 
   async function deletePlayer(userId: string) {
@@ -374,7 +388,7 @@ export function useCompetitionActions({
       }
 
       setMessage('Jogador removido do bolao.')
-      await recalculateRanking()
+      await recalculateRankingAfterPublish()
     } catch {
       setMessage('Nao foi possivel remover o jogador. Tente de novo em alguns segundos.')
     }
@@ -558,7 +572,7 @@ export function useCompetitionActions({
     setMessage(
       `Rodada ${roundNumber} apagada (${roundMatches.length} jogo(s) e ${roundPredictions.length} palpite(s)).`,
     )
-    await recalculateRanking()
+    await recalculateRankingAfterPublish()
   }
 
   async function updateRealScore(
@@ -589,7 +603,7 @@ export function useCompetitionActions({
       publishedAt: serverTimestamp(),
     })
     setMessage('Resultado publicado. Ranking e tabela ja foram recalculados.')
-    await recalculateRanking()
+    await recalculateRankingAfterPublish()
   }
 
   async function addKnockoutTie(event: FormEvent<HTMLFormElement>) {
@@ -811,7 +825,7 @@ export function useCompetitionActions({
         homeLegPublishedAt: serverTimestamp(),
       })
       setMessage('Placar de ida publicado.')
-      await recalculateRanking()
+      await recalculateRankingAfterPublish()
       return
     }
 
@@ -831,7 +845,7 @@ export function useCompetitionActions({
         awayLegPublishedAt: serverTimestamp(),
       })
       setMessage('Placar de volta publicado.')
-      await recalculateRanking()
+      await recalculateRankingAfterPublish()
       return
     }
 
@@ -853,7 +867,7 @@ export function useCompetitionActions({
       publishedAt: serverTimestamp(),
     })
     setMessage('Placar do mata-mata publicado.')
-    await recalculateRanking()
+    await recalculateRankingAfterPublish()
   }
 
   async function updateWinner(tieId: string, winnerTeamId: string) {

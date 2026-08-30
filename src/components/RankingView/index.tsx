@@ -1,18 +1,24 @@
 import { EmptyState } from '../EmptyState'
-import type { RankingEntry } from '../../types'
+import type { Player, RankingEntry } from '../../types'
 import './RankingView.css'
 
 type RankingViewProps = {
   lastScoredRoundId?: string | null
+  players: Player[]
   ranking: RankingEntry[]
 }
 
-export function RankingView({ lastScoredRoundId, ranking }: RankingViewProps) {
-  if (ranking.length === 0) {
+export function RankingView({ lastScoredRoundId, players, ranking }: RankingViewProps) {
+  // Enquanto o servidor nao gravar o ranking, mostramos os jogadores zerados —
+  // a lista nunca fica vazia so porque o calculo ainda nao rodou.
+  const pending = ranking.length === 0
+  const entries: RankingEntry[] = pending ? buildPendingRanking(players) : ranking
+
+  if (entries.length === 0) {
     return (
       <EmptyState
         title="Sem jogadores ainda"
-        text="Os amigos aparecem no ranking depois do primeiro login."
+        text="Os amigos aparecem no ranking depois de serem liberados como jogador."
       />
     )
   }
@@ -26,8 +32,15 @@ export function RankingView({ lastScoredRoundId, ranking }: RankingViewProps) {
         </div>
       </div>
 
+      {pending ? (
+        <p className="ranking-pending">
+          A pontuacao ainda nao foi calculada pelo servidor. Assim que o admin publicar um placar, o
+          ranking aparece atualizado aqui.
+        </p>
+      ) : null}
+
       <div className="ranking-list">
-        {ranking.map((player, index) => {
+        {entries.map((player, index) => {
           const place = player.position ?? index + 1
           const positionClass = getPositionClassName(place)
           const movement = getMovement(place, player.previousPosition)
@@ -68,6 +81,22 @@ export function RankingView({ lastScoredRoundId, ranking }: RankingViewProps) {
       </div>
     </section>
   )
+}
+
+/** Jogadores liberados, todos zerados, para o ranking nunca ficar vazio. */
+function buildPendingRanking(players: Player[]): RankingEntry[] {
+  return players
+    .filter((player) => player.approved)
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((player, index) => ({
+      userId: player.id,
+      name: player.name,
+      photoURL: player.photoURL ?? null,
+      points: 0,
+      roundPoints: {},
+      position: index + 1,
+      previousPosition: null,
+    }))
 }
 
 /** Compara a posicao atual com a de antes da ultima rodada pontuada. */

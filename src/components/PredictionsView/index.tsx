@@ -183,7 +183,9 @@ function RoundPredictions({
           </div>
         ) : null}
       </div>
-      <div className="match-days">
+      {/* Com resultado as linhas ganham rotulo e etiqueta de pontos; a classe abaixo
+          iguala a altura de todas para o Dia 1 e o Dia 2 ficarem alinhados. */}
+      <div className={hasResults ? 'match-days match-days--scored' : 'match-days'}>
         {matchesByDay.map(({ day, matches: dayMatches }) => (
           <section className="match-day" key={day}>
             <h3>Dia {day}</h3>

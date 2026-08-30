@@ -65,3 +65,21 @@
   display: flex;
   justify-content: flex-start;
 }
+
+.ranking-status {
+  background: rgba(56, 225, 255, 0.1);
+  border: 1px solid rgba(56, 225, 255, 0.35);
+  border-radius: 10px;
+  color: #9becff;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  padding: 10px 12px;
+  word-break: break-word;
+}
+
+.ranking-status--error {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(248, 113, 113, 0.45);
+  color: #fca5a5;
+  font-family: var(--font-mono, monospace);
+}

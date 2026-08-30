@@ -101,6 +101,20 @@
   justify-content: center;
 }
 
+/* Rodada com resultado: todas as linhas com a mesma altura, para o Dia 1
+   e o Dia 2 ficarem alinhados lado a lado. */
+.match-days--scored .match-row {
+  align-content: center;
+  min-height: 138px;
+}
+
+/* Reserva a altura do rotulo mesmo quando ele nao aparece (caso do 'cravou'),
+   assim as caixas de placar ficam na mesma linha em todos os jogos. */
+.match-days--scored .score-group {
+  align-content: end;
+  min-height: 64px;
+}
+
 /* Separador entre o palpite e o placar real. */
 .score-group--real {
   border-left: 1px solid var(--app-line);

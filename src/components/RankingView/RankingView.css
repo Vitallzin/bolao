@@ -111,3 +111,13 @@
     justify-self: end;
   }
 }
+
+.ranking-pending {
+  background: rgba(56, 225, 255, 0.08);
+  border: 1px dashed rgba(56, 225, 255, 0.35);
+  border-radius: 10px;
+  color: var(--app-muted);
+  font-size: 0.86rem;
+  line-height: 1.5;
+  padding: 10px 12px;
+}
