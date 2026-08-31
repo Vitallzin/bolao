@@ -37,13 +37,13 @@ export function RankingView({ lastScoredRoundId, players, ranking }: RankingView
       <div className="section-heading">
         <div>
           <span className="eyebrow">Amigos</span>
-          <h2>Classificacao do bolao</h2>
+          <h2>Classificação do bolão</h2>
         </div>
       </div>
 
       {pending ? (
         <p className="ranking-pending">
-          A pontuacao ainda nao foi calculada pelo servidor. Assim que o admin publicar um placar, o
+          A pontuação ainda não foi calculada pelo servidor. Assim que o admin publicar um placar, o
           ranking aparece atualizado aqui.
         </p>
       ) : null}
@@ -62,7 +62,7 @@ export function RankingView({ lastScoredRoundId, players, ranking }: RankingView
               <div className="ranking-row__player">
                 <strong>{player.name}</strong>
                 {roundPoints !== null ? (
-                  <span className="ranking-row__round">+{roundPoints} na ultima rodada</span>
+                  <span className="ranking-row__round">+{roundPoints} na última rodada</span>
                 ) : null}
               </div>
 
@@ -71,14 +71,14 @@ export function RankingView({ lastScoredRoundId, players, ranking }: RankingView
                   className={`ranking-move ranking-move--${movement.direction}`}
                   title={
                     movement.direction === 'up'
-                      ? `Subiu ${movement.places} posicao(oes)`
-                      : `Caiu ${movement.places} posicao(oes)`
+                      ? `Subiu ${movement.places} posição(oes)`
+                      : `Caiu ${movement.places} posição(oes)`
                   }
                 >
                   {movement.direction === 'up' ? '▲' : '▼'} {movement.places}
                 </span>
               ) : (
-                <span className="ranking-move ranking-move--same" title="Manteve a posicao">
+                <span className="ranking-move ranking-move--same" title="Manteve a posição">
                   –
                 </span>
               )}

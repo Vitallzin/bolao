@@ -98,14 +98,14 @@ function TeamForm({ onAddTeam }: { onAddTeam: (event: FormEvent<HTMLFormElement>
       />
       <input name="countryCode" type="hidden" value={countryCode} />
       <div className="country-picker">
-        <label htmlFor="country-search">Pais</label>
+        <label htmlFor="country-search">País</label>
         <div className="selected-country">
           <img alt="" height="24" src={getFlagUrl(countryCode)} width="24" />
           <strong>{europeanCountries.find((country) => country.code === countryCode)?.name}</strong>
         </div>
         <input
           id="country-search"
-          placeholder="Pesquisar pais europeu"
+          placeholder="Pesquisar país europeu"
           value={countrySearch}
           onChange={(event) => setCountrySearch(event.target.value)}
         />
@@ -224,14 +224,14 @@ function EditTeamModal({
           placeholder="Sigla"
         />
         <div className="country-picker country-picker--light">
-          <label htmlFor="edit-country-search">Pais</label>
+          <label htmlFor="edit-country-search">País</label>
           <div className="selected-country">
             <img alt="" height="24" src={getFlagUrl(countryCode)} width="24" />
             <strong>{europeanCountries.find((country) => country.code === countryCode)?.name}</strong>
           </div>
           <input
             id="edit-country-search"
-            placeholder="Pesquisar pais europeu"
+            placeholder="Pesquisar país europeu"
             value={countrySearch}
             onChange={(event) => setCountrySearch(event.target.value)}
           />
@@ -255,7 +255,7 @@ function EditTeamModal({
           <Button className="confirm-cancel-button" onClick={onCancel} variant="ghost">
             Cancelar
           </Button>
-          <Button type="submit">Salvar alteracoes</Button>
+          <Button type="submit">Salvar alterações</Button>
         </div>
       </form>
     </div>
@@ -274,9 +274,9 @@ function ConfirmDeleteModal({
   return (
     <div className="confirm-overlay" role="presentation">
       <div className="confirm-card" role="dialog" aria-modal="true" aria-labelledby="delete-team-title">
-        <span className="eyebrow">Confirmar exclusao</span>
+        <span className="eyebrow">Confirmar exclusão</span>
         <h2 id="delete-team-title">Apagar {team.name}?</h2>
-        <p>Essa acao remove o time cadastrado do bolao. Tem certeza que quer continuar?</p>
+        <p>Essa ação remove o time cadastrado do bolão. Tem certeza que quer continuar?</p>
         <div className="confirm-actions">
           <Button className="confirm-cancel-button" onClick={onCancel} variant="ghost">
             Cancelar

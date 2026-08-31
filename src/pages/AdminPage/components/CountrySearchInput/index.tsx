@@ -12,7 +12,7 @@ type CountrySearchInputProps = {
 export function CountrySearchInput({
   name,
   onChange,
-  placeholder = 'Buscar pais...',
+  placeholder = 'Buscar país...',
   value,
 }: CountrySearchInputProps) {
   const selectedCountry = getCountryEntry(value)

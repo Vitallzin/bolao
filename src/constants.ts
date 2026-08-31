@@ -17,7 +17,7 @@ export const githubUrl = 'https://github.com/Vitallzin'
  * consegue importar daqui. AO MUDAR ESTA LISTA, MUDE NOS DOIS LUGARES.
  */
 export const notificationTimeSlots = [
-  { value: '08:00', label: 'De manha (a partir das 08:00)' },
+  { value: '08:00', label: 'De manhã (a partir das 08:00)' },
   { value: '12:00', label: 'Meio-dia (a partir das 12:00)' },
   { value: '18:00', label: 'Fim de tarde (a partir das 18:00)' },
   { value: '21:00', label: 'A noite (a partir das 21:00)' },

@@ -17,10 +17,10 @@ export function LoginPage({ message, onEmailLogin, onEmailSignUp, onGoogleLogin 
   return (
     <main className="login-shell">
       <div className="login-stage">
-        <section className="login-card" aria-label="Entrar no bolao">
-          <strong className="login-card-brand">Bolao da Champions</strong>
+        <section className="login-card" aria-label="Entrar no bolão">
+          <strong className="login-card-brand">Bolão da Champions</strong>
           <div className="login-title">
-            <span>Area do jogador</span>
+            <span>Área do jogador</span>
             <h2>{mode === 'signin' ? 'Entrar' : 'Criar conta'}</h2>
             <p>
               {mode === 'signin'
@@ -87,18 +87,18 @@ export function VerifyEmailPage({ email, message, onCheckAgain, onLogout, onRese
     <main className="login-shell">
       <div className="login-stage">
         <section className="login-card" aria-label="Confirme seu email">
-          <strong className="login-card-brand">Bolao da Champions</strong>
+          <strong className="login-card-brand">Bolão da Champions</strong>
           <div className="login-title">
-            <span>Area do jogador</span>
+            <span>Área do jogador</span>
             <h2>Confirme seu email</h2>
             <p>
-              Mandamos um link de confirmacao para <strong>{email}</strong>. Abra seu email, clique no link
+              Mandamos um link de confirmação para <strong>{email}</strong>. Abra seu email, clique no link
               e volte aqui.
             </p>
           </div>
 
           <div className="login-actions">
-            <Button onClick={onCheckAgain}>Ja confirmei, verificar de novo</Button>
+            <Button onClick={onCheckAgain}>Já confirmei, verificar de novo</Button>
             <Button onClick={onResend} variant="ghost">Reenviar email</Button>
             <Button onClick={onLogout} variant="ghost">Sair</Button>
             {message ? <p className="login-error">{message}</p> : null}
@@ -156,7 +156,7 @@ function SignUpForm({ onSubmit }: { onSubmit: (name: string, email: string, pass
     event.preventDefault()
 
     if (password !== confirmPassword) {
-      setValidationError('As senhas digitadas nao sao iguais.')
+      setValidationError('As senhas digitadas não são iguais.')
       return
     }
 

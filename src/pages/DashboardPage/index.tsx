@@ -297,8 +297,8 @@ export function DashboardPage({
 function PendingApprovalNotice() {
   return (
     <EmptyState
-      title="Voce esta como visitante"
-      text="Visitante so consegue ver o site. Peca para o admin te liberar como jogador para enviar palpites e aparecer no ranking."
+      title="Você está como visitante"
+      text="Visitante só consegue ver o site. Peça para o admin te liberar como jogador para enviar palpites e aparecer no ranking."
     />
   )
 }

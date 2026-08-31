@@ -83,7 +83,7 @@ function PlayerStatForm({
         <CountrySearchInput
           key={formResetCount}
           name="nationalityCode"
-          placeholder="Buscar pais..."
+          placeholder="Buscar país..."
           value={nationalityCode}
           onChange={setNationalityCode}
         />
@@ -135,7 +135,7 @@ function PlayerStatRow({
       </select>
       <CountrySearchInput
         name="nationalityCode"
-        placeholder="Buscar pais..."
+        placeholder="Buscar país..."
         value={draft.nationalityCode}
         onChange={(code) => setDraft((current) => ({ ...current, nationalityCode: code }))}
       />

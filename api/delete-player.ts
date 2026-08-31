@@ -22,14 +22,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const idToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
 
   if (!idToken) {
-    res.status(401).json({ error: 'Token de autenticacao ausente.' })
+    res.status(401).json({ error: 'Token de autenticação ausente.' })
     return
   }
 
   const targetUserId = typeof req.body?.userId === 'string' ? req.body.userId : ''
 
   if (!targetUserId) {
-    res.status(400).json({ error: 'Informe o jogador que sera removido.' })
+    res.status(400).json({ error: 'Informe o jogador que será removido.' })
     return
   }
 
@@ -43,14 +43,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (targetUserId === caller.uid) {
-      res.status(400).json({ error: 'Voce nao pode remover a sua propria conta por aqui.' })
+      res.status(400).json({ error: 'Você não pode remover a sua própria conta por aqui.' })
       return
     }
 
     const targetDoc = await db.collection('users').doc(targetUserId).get()
 
     if (targetDoc.exists && targetDoc.data()?.role === 'admin') {
-      res.status(400).json({ error: 'Nao da para remover outro admin.' })
+      res.status(400).json({ error: 'Não dá para remover outro admin.' })
       return
     }
 
@@ -60,7 +60,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.status(200).json({ removed: true })
   } catch (error) {
     console.error('delete-player failed:', error)
-    res.status(500).json({ error: 'Nao foi possivel remover o jogador.' })
+    res.status(500).json({ error: 'Não foi possível remover o jogador.' })
   }
 }
 

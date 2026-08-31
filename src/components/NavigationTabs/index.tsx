@@ -9,7 +9,7 @@ type NavigationTabsProps = {
 
 export function NavigationTabs({ activeView, onChange }: NavigationTabsProps) {
   return (
-    <nav className="tabs" aria-label="Navegacao principal">
+    <nav className="tabs" aria-label="Navegação principal">
       {(['palpites', 'previsoes', 'ranking', 'champions', 'statistics', 'mata-mata', 'regras', 'sobre'] as View[]).map((view) => (
         <button
           key={view}

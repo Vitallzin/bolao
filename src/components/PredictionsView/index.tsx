@@ -88,7 +88,7 @@ export function PredictionsView({
       {activeStep.kind === 'round-placeholder' ? (
         <EmptyState
           title="Jogos em breve"
-          text="Os jogos dessa rodada serao postados em breve."
+          text="Os jogos dessa rodada serão postados em breve."
         />
       ) : activeStep.kind === 'round' ? (
         <RoundPredictions
@@ -156,7 +156,7 @@ function RoundPredictions({
     return (
       <EmptyState
         title="Sem jogos nessa rodada"
-        text="Assim que o admin definir e publicar os confrontos, voce consegue palpitar."
+        text="Assim que o admin definir e publicar os confrontos, você consegue palpitar."
       />
     )
   }
@@ -165,7 +165,7 @@ function RoundPredictions({
     <>
       <div className="round-status-line">
         <span className={locked ? 'status-pill status-pill--locked' : 'status-pill'}>
-          {locked ? 'Fechada' : `Aberta ate ${formatDateTime(round.deadline)}`}
+          {locked ? 'Fechada' : `Aberta até ${formatDateTime(round.deadline)}`}
         </span>
 
         {hasResults ? (
@@ -316,13 +316,13 @@ function PointsLegend() {
         <span className="match-points__icon" aria-hidden="true">✕</span>
         <div>
           <strong>Errou</strong>
-          <small>Nao acertou nada do palpite. 0 pontos.</small>
+          <small>Não acertou nada do palpite. 0 pontos.</small>
         </div>
       </div>
       <div className="points-legend__item points-legend__item--info">
         <span className="match-points__icon" aria-hidden="true">🏆</span>
         <div>
-          <strong>Pontuacao</strong>
+          <strong>Pontuação</strong>
           <small>Erro de 2 gols ainda vale {offByTwo}. Quanto mais avancada a fase, mais pontos.</small>
         </div>
       </div>
@@ -363,7 +363,7 @@ function KnockoutPredictions({
     return (
       <EmptyState
         title={`Sem jogos em ${label}`}
-        text="Assim que o admin cadastrar os confrontos, voce consegue palpitar."
+        text="Assim que o admin cadastrar os confrontos, você consegue palpitar."
       />
     )
   }
@@ -398,7 +398,7 @@ function KnockoutPredictions({
       )}
 
       <span className={locked ? 'status-pill status-pill--locked' : 'status-pill'}>
-        {locked || !deadline ? 'Fechada' : `Aberta ate ${formatDateTime(deadline)}`}
+        {locked || !deadline ? 'Fechada' : `Aberta até ${formatDateTime(deadline)}`}
       </span>
 
       <div className="prediction-knockout-grid">

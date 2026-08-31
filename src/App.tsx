@@ -103,7 +103,7 @@ function App() {
 
     void actions.recalculateRanking().then((failure) => {
       if (failure) {
-        setMessage(`Nao consegui montar o ranking: ${failure}`)
+        setMessage(`Não consegui montar o ranking: ${failure}`)
       }
     })
   }, [actions, isAdmin, ranking.length, rankingLoaded, setMessage])
@@ -167,7 +167,7 @@ function App() {
   }
 
   if (loading) {
-    return <main className="loading-screen">Carregando bolao...</main>
+    return <main className="loading-screen">Carregando bolão...</main>
   }
 
   if (!currentUser) {

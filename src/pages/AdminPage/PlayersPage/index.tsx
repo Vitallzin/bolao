@@ -40,12 +40,12 @@ export function PlayersPage({
       <h2>Jogador ou visitante</h2>
       <p className="muted-text">
         {visitorCount > 0
-          ? `${visitorCount} pessoa(s) como visitante ainda. Visitante so consegue ver o site; jogador tambem envia palpites e aparece no ranking.`
-          : 'Todo mundo que entrou ja esta como jogador ou e admin.'}
+          ? `${visitorCount} pessoa(s) como visitante ainda. Visitante só consegue ver o site; jogador também envia palpites e aparece no ranking.`
+          : 'Todo mundo que entrou já está como jogador ou é admin.'}
       </p>
 
       {orderedPlayers.length === 0 ? (
-        <p className="muted-text">Ninguem entrou no site ainda.</p>
+        <p className="muted-text">Ninguém entrou no site ainda.</p>
       ) : (
         <div className="player-approval-list">
           {orderedPlayers.map((player) => (
@@ -131,11 +131,11 @@ function ConfirmRemovePlayerModal({
   return (
     <div className="confirm-overlay" role="presentation">
       <div className="confirm-card" role="dialog" aria-modal="true" aria-labelledby="remove-player-title">
-        <span className="eyebrow">Remover do bolao</span>
+        <span className="eyebrow">Remover do bolão</span>
         <h2 id="remove-player-title">Remover {player.name}?</h2>
         <p>
-          Isso apaga a conta dessa pessoa de vez: perfil, palpites e o login. Para voltar ao bolao, ela
-          teria que criar uma conta nova do zero. Nao da para desfazer.
+          Isso apaga a conta dessa pessoa de vez: perfil, palpites e o login. Para voltar ao bolão, ela
+          teria que criar uma conta nova do zero. Não dá para desfazer.
         </p>
         <div className="confirm-actions">
           <Button className="confirm-cancel-button" onClick={onCancel} variant="ghost">
@@ -164,14 +164,14 @@ function ConfirmRoleChangeModal({
   return (
     <div className="confirm-overlay" role="presentation">
       <div className="confirm-card" role="dialog" aria-modal="true" aria-labelledby="role-change-title">
-        <span className="eyebrow">Confirmar alteracao</span>
+        <span className="eyebrow">Confirmar alteração</span>
         <h2 id="role-change-title">
           Tornar {player.name} {nextApproved ? 'jogador' : 'visitante'}?
         </h2>
         <p>
           {nextApproved
             ? 'A partir de agora essa pessoa consegue enviar palpites e aparece no ranking.'
-            : 'A partir de agora essa pessoa so consegue ver o site, sem enviar palpites e sem aparecer no ranking.'}
+            : 'A partir de agora essa pessoa só consegue ver o site, sem enviar palpites e sem aparecer no ranking.'}
         </p>
         <div className="confirm-actions">
           <Button className="confirm-cancel-button" onClick={onCancel} variant="ghost">

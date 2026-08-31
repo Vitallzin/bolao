@@ -111,7 +111,7 @@ export function AdminPage({
         </div>
       </div>
 
-      <nav className="admin-menu" aria-label="Areas do admin">
+      <nav className="admin-menu" aria-label="Áreas do admin">
         {adminSections.map((section) => (
           <button
             key={section.id}

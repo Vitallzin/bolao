@@ -107,7 +107,7 @@ export function useAuthProfile() {
 
     try {
       await requestVerificationEmail(auth.currentUser)
-      showMessage('Email de confirmacao reenviado.')
+      showMessage('Email de confirmação reenviado.')
     } catch (error) {
       showMessage(getAuthFlowMessage(error))
     }
@@ -122,7 +122,7 @@ export function useAuthProfile() {
     setEmailVerified(Boolean(auth.currentUser.emailVerified))
 
     if (!auth.currentUser.emailVerified) {
-      showMessage('Ainda nao encontramos a confirmacao. Confira sua caixa de entrada (e o spam).')
+      showMessage('Ainda não encontramos a confirmação. Confira sua caixa de entrada (e o spam).')
     }
   }
 
@@ -160,7 +160,7 @@ export function useAuthProfile() {
       updatedAt: serverTimestamp(),
     })
     setCurrentUser((profile) => (profile ? { ...profile, ...preferences } : profile))
-    showMessage('Preferencias de notificacao salvas.')
+    showMessage('Preferências de notificação salvas.')
   }
 
   return {
@@ -265,7 +265,7 @@ async function requestVerificationEmail(user: User) {
   })
 
   if (!response.ok) {
-    throw new Error('Nao consegui enviar o email de confirmacao. Tente de novo em alguns segundos.')
+    throw new Error('Não consegui enviar o email de confirmação. Tente de novo em alguns segundos.')
   }
 }
 

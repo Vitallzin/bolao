@@ -51,7 +51,7 @@ export function CompetitionPredictionsPage({
             ? 'Enviada'
             : deadlinePassed
               ? 'Fechada'
-              : `Aberta ate ${formatDateTime(competitionPredictionDeadline)}`}
+              : `Aberta até ${formatDateTime(competitionPredictionDeadline)}`}
         </span>
       </div>
 

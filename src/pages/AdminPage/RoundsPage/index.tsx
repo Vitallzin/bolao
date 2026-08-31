@@ -138,7 +138,7 @@ export function RoundsPage({
             </button>
           </div>
           <label className="deadline-field">
-            Data e horario limite
+            Data e horário limite
             <input
               max="9999-12-31T23:59"
               type="datetime-local"
@@ -226,11 +226,11 @@ function ConfirmDeleteRoundModal({
   return (
     <div className="confirm-overlay" role="presentation">
       <div className="confirm-card" role="dialog" aria-modal="true" aria-labelledby="delete-round-title">
-        <span className="eyebrow">Confirmar exclusao</span>
+        <span className="eyebrow">Confirmar exclusão</span>
         <h2 id="delete-round-title">Apagar a Rodada {roundNumber}?</h2>
         <p>
           Isso apaga os {matchCount} jogo(s) da rodada e todos os palpites feitos neles. A tabela da fase
-          de liga e o ranking sao recalculados sem esses resultados. Nao da para desfazer.
+          de liga e o ranking são recalculados sem esses resultados. Não dá para desfazer.
         </p>
         <div className="confirm-actions">
           <Button className="confirm-cancel-button" onClick={onCancel} variant="ghost">

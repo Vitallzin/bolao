@@ -242,7 +242,7 @@ function KnockoutResultLegSection({
     <section className="playoff-leg-container">
       <h3>{label}</h3>
       <label className="deadline-field playoff-deadline-field">
-        Data e horario limite
+        Data e horário limite
         <input
           max="9999-12-31T23:59"
           type="datetime-local"

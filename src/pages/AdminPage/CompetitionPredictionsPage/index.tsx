@@ -115,7 +115,7 @@ function DeadlineCard({
         houver prazo definido, ninguém consegue enviar.
       </p>
       <label className="deadline-field">
-        Data e horario limite
+        Data e horário limite
         <input
           max="9999-12-31T23:59"
           type="datetime-local"

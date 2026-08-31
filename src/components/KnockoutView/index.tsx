@@ -23,7 +23,7 @@ export function KnockoutView({ knockout, onWinnerChange, teamMap }: KnockoutView
         </div>
       </div>
 
-      <div className="knockout-phase-nav" aria-label="Navegacao do mata-mata">
+      <div className="knockout-phase-nav" aria-label="Navegação do mata-mata">
         {activePhase === 'playoffs' ? (
           <>
             <h3>Playoffs</h3>

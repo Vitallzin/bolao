@@ -350,7 +350,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const idToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
 
   if (!idToken) {
-    res.status(401).json({ error: 'Token de autenticacao ausente.' })
+    res.status(401).json({ error: 'Token de autenticação ausente.' })
     return
   }
 
@@ -362,7 +362,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     isAdmin = callerDoc.data()?.role === 'admin'
   } catch (error) {
     console.error('recalculate-ranking auth failed:', error)
-    res.status(401).json({ error: 'Nao consegui validar seu login.' })
+    res.status(401).json({ error: 'Não consegui validar seu login.' })
     return
   }
 

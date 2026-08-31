@@ -136,17 +136,17 @@ export function useCompetitionActions({
     }
 
     if (!competitionPredictionDeadline) {
-      setMessage('O admin ainda nao abriu o prazo das previsoes da competicao.')
+      setMessage('O admin ainda não abriu o prazo das previsões da competição.')
       return
     }
 
     if (new Date() >= competitionPredictionDeadline) {
-      setMessage('O prazo para enviar previsoes da competicao ja encerrou.')
+      setMessage('O prazo para enviar previsões da competição já encerrou.')
       return
     }
 
     if (competitionPredictions.some((prediction) => prediction.userId === currentUser.id)) {
-      setMessage('Voce ja enviou suas previsoes da competicao.')
+      setMessage('Você já enviou suas previsões da competição.')
       return
     }
 
@@ -169,7 +169,7 @@ export function useCompetitionActions({
       hasDuplicateNames(topAssists) ||
       championTeamId === runnerUpTeamId
     ) {
-      setMessage('Preencha todas as previsoes da competicao.')
+      setMessage('Preencha todas as previsões da competição.')
       return
     }
 
@@ -183,7 +183,7 @@ export function useCompetitionActions({
       runnerUpTeamId,
       createdAt: serverTimestamp(),
     })
-    setMessage('Previsoes da competicao enviadas.')
+    setMessage('Previsões da competição enviadas.')
   }
 
   async function saveCompetitionPredictionResult(event: FormEvent<HTMLFormElement>) {
@@ -207,7 +207,7 @@ export function useCompetitionActions({
       hasDuplicateNames(topAssists) ||
       championTeamId === runnerUpTeamId
     ) {
-      setMessage('Preencha todos os resultados oficiais das previsoes.')
+      setMessage('Preencha todos os resultados oficiais das previsões.')
       return
     }
 
@@ -225,13 +225,13 @@ export function useCompetitionActions({
       },
       { merge: true },
     )
-    setMessage('Resultado das previsoes salvo.')
+    setMessage('Resultado das previsões salvo.')
   }
 
   /** Prazo proprio das previsoes da competicao, separado das rodadas. */
   async function saveCompetitionPredictionDeadline(value: string) {
     if (!value) {
-      setMessage('Defina a data e o horario limite das previsoes.')
+      setMessage('Defina a data e o horário limite das previsões.')
       return
     }
 
@@ -243,7 +243,7 @@ export function useCompetitionActions({
       },
       { merge: true },
     )
-    setMessage('Prazo das previsoes salvo.')
+    setMessage('Prazo das previsões salvo.')
   }
 
   async function publishCompetitionPredictionResult() {
@@ -256,7 +256,7 @@ export function useCompetitionActions({
       published: true,
       publishedAt: serverTimestamp(),
     })
-    setMessage('Pontuacao das previsoes publicada no ranking.')
+    setMessage('Pontuação das previsões publicada no ranking.')
     await recalculateRankingAfterPublish()
   }
 
@@ -269,7 +269,7 @@ export function useCompetitionActions({
     const countryCode = String(data.get('countryCode') || '').trim().toUpperCase()
 
     if (!name || !shortName || !countryCode) {
-      setMessage('Preencha nome, sigla e pais do time.')
+      setMessage('Preencha nome, sigla e país do time.')
       return
     }
 
@@ -291,7 +291,7 @@ export function useCompetitionActions({
     const countryCode = team.countryCode.trim().toUpperCase()
 
     if (!name || !shortName || !countryCode) {
-      setMessage('Preencha nome, sigla e pais do time.')
+      setMessage('Preencha nome, sigla e país do time.')
       return
     }
 
@@ -319,7 +319,7 @@ export function useCompetitionActions({
     const failure = await recalculateRanking()
 
     if (failure) {
-      setMessage(`Ranking nao atualizou: ${failure}`)
+      setMessage(`Ranking não atualizou: ${failure}`)
     }
   }
 
@@ -358,13 +358,13 @@ export function useCompetitionActions({
 
   async function approveUser(userId: string, approved: boolean) {
     await updateDoc(doc(db, 'users', userId), { approved })
-    setMessage(approved ? 'Agora e jogador.' : 'Agora e visitante.')
+    setMessage(approved ? 'Agora é jogador.' : 'Agora é visitante.')
     await recalculateRankingAfterPublish()
   }
 
   async function deletePlayer(userId: string) {
     if (userId === currentUser?.id) {
-      setMessage('Voce nao pode remover a sua propria conta por aqui.')
+      setMessage('Você não pode remover a sua própria conta por aqui.')
       return
     }
 
@@ -386,14 +386,14 @@ export function useCompetitionActions({
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}))
-        setMessage(data.error || 'Nao foi possivel remover o jogador.')
+        setMessage(data.error || 'Não foi possível remover o jogador.')
         return
       }
 
-      setMessage('Jogador removido do bolao.')
+      setMessage('Jogador removido do bolão.')
       await recalculateRankingAfterPublish()
     } catch {
-      setMessage('Nao foi possivel remover o jogador. Tente de novo em alguns segundos.')
+      setMessage('Não foi possível remover o jogador. Tente de novo em alguns segundos.')
     }
   }
 
@@ -420,7 +420,7 @@ export function useCompetitionActions({
       createdAt: serverTimestamp(),
     })
     event.currentTarget.reset()
-    setMessage('Jogador cadastrado nas estatisticas.')
+    setMessage('Jogador cadastrado nas estatísticas.')
   }
 
   async function updatePlayerStat(playerStat: PlayerStat) {
@@ -440,12 +440,12 @@ export function useCompetitionActions({
       assists: Math.max(0, Number(playerStat.assists || 0)),
       updatedAt: serverTimestamp(),
     })
-    setMessage('Estatisticas do jogador atualizadas.')
+    setMessage('Estatísticas do jogador atualizadas.')
   }
 
   async function deletePlayerStat(playerStatId: string) {
     await deleteDoc(doc(db, 'competitions', competitionId, 'playerStats', playerStatId))
-    setMessage('Jogador removido das estatisticas.')
+    setMessage('Jogador removido das estatísticas.')
   }
 
   async function saveRound(
@@ -644,7 +644,7 @@ export function useCompetitionActions({
       scorePublished: true,
       publishedAt: serverTimestamp(),
     })
-    setMessage('Resultado publicado. Ranking e tabela ja foram recalculados.')
+    setMessage('Resultado publicado. Ranking e tabela já foram recalculados.')
     await recalculateRankingAfterPublish()
   }
 
@@ -952,7 +952,7 @@ export function useCompetitionActions({
     const tie = knockout.find((item) => item.id === tieId)
 
     if (!tie) {
-      setMessage('Confronto nao encontrado.')
+      setMessage('Confronto não encontrado.')
       return
     }
 

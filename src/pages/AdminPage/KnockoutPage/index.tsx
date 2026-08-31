@@ -36,7 +36,7 @@ export function KnockoutPage({
 
   return (
     <div className="knockout-manager">
-      <div className="knockout-admin-nav" aria-label="Navegacao do mata-mata no admin">
+      <div className="knockout-admin-nav" aria-label="Navegação do mata-mata no admin">
         {activeKnockoutPhase === 'playoffs' ? (
           <>
             <span className="knockout-nav-spacer" aria-hidden="true" />

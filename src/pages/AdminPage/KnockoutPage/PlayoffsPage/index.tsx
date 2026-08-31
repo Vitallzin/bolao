@@ -63,7 +63,7 @@ export function PlayoffsPage({
           <section className="playoff-leg-container">
             <h3>Ida</h3>
             <label className="deadline-field playoff-deadline-field">
-              Data e horario limite
+              Data e horário limite
               <input
                 max="9999-12-31T23:59"
                 name="playoff-homeLegDeadline"
@@ -153,7 +153,7 @@ export function PlayoffsPage({
           <section className="playoff-leg-container">
             <h3>Volta</h3>
             <label className="deadline-field playoff-deadline-field">
-              Data e horario limite
+              Data e horário limite
               <input
                 max="9999-12-31T23:59"
                 name="playoff-awayLegDeadline"
@@ -249,9 +249,9 @@ function ConfirmDeleteTieModal({
   return (
     <div className="confirm-overlay" role="presentation">
       <div className="confirm-card" role="dialog" aria-modal="true" aria-labelledby="delete-tie-title">
-        <span className="eyebrow">Confirmar exclusao</span>
+        <span className="eyebrow">Confirmar exclusão</span>
         <h2 id="delete-tie-title">Apagar Jogo {gameNumber}?</h2>
-        <p>Essa acao remove o confronto e os palpites feitos para ele. Tem certeza que quer continuar?</p>
+        <p>Essa ação remove o confronto e os palpites feitos para ele. Tem certeza que quer continuar?</p>
         <div className="confirm-actions">
           <Button className="confirm-cancel-button" onClick={onCancel} variant="ghost">
             Cancelar

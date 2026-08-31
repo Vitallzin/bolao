@@ -61,7 +61,7 @@ export function AppHeader({
         <Starball />
         <div>
           <span className="eyebrow">Champions 2026</span>
-          <h1>Bolao dos amigos</h1>
+          <h1>Bolão dos amigos</h1>
         </div>
       </div>
       <div className="topbar__actions">
@@ -308,7 +308,7 @@ function AccountSettingsModal({
         <section className="account-danger-zone">
           <div>
             <h3>Zona de perigo</h3>
-            <p>Excluir sua conta remove seu perfil e todos os seus palpites. Nao da pra desfazer.</p>
+            <p>Excluir sua conta remove seu perfil e todos os seus palpites. Não dá pra desfazer.</p>
           </div>
           <button className="account-danger-button" type="button" onClick={() => setDeleteConfirmOpen(true)}>
             Excluir conta
@@ -344,7 +344,7 @@ function DeleteAccountConfirmModal({
     try {
       await onConfirm()
     } catch {
-      setError('Nao foi possivel excluir a conta agora. Saia, entre de novo e tente outra vez.')
+      setError('Não foi possível excluir a conta agora. Saia, entre de novo e tente outra vez.')
       setDeleting(false)
     }
   }
@@ -360,8 +360,8 @@ function DeleteAccountConfirmModal({
         <span className="eyebrow">Excluir conta</span>
         <h2 id="delete-account-title">Tem certeza?</h2>
         <p>
-          Isso apaga seu perfil e todos os seus palpites para sempre — nao da pra desfazer. Se der erro
-          de sessao, saia e entre de novo antes de tentar.
+          Isso apaga seu perfil e todos os seus palpites para sempre — não dá pra desfazer. Se der erro
+          de sessão, saia e entre de novo antes de tentar.
         </p>
         {error ? <p className="account-modal-error">{error}</p> : null}
         <div className="account-confirm-actions">
@@ -402,7 +402,7 @@ function NotificationSettings({
     <form className="account-notifications" onSubmit={handleSubmit}>
       <div>
         <h3>Notificações por email</h3>
-        <p>Avisos de rodada nova e lembrete perto do prazo, se voce ainda nao palpitou.</p>
+        <p>Avisos de rodada nova e lembrete perto do prazo, se você ainda não palpitou.</p>
       </div>
 
       <label className="account-switch">
@@ -436,7 +436,7 @@ function NotificationSettings({
                 setDraft((current) => ({ ...current, notifyOnDeadlineReminder: event.target.checked }))
               }
             />
-            Lembrar se eu ainda nao palpitei perto do prazo
+            Lembrar se eu ainda não palpitei perto do prazo
           </label>
           <label>
             Avisar quantos dias antes do prazo

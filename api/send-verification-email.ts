@@ -30,7 +30,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const idToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
 
   if (!idToken) {
-    res.status(401).json({ error: 'Token de autenticacao ausente.' })
+    res.status(401).json({ error: 'Token de autenticação ausente.' })
     return
   }
 
@@ -62,7 +62,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.status(200).json({ sent: true })
   } catch (error) {
     console.error('send-verification-email failed:', error)
-    res.status(500).json({ error: 'Nao foi possivel enviar o email de confirmacao.' })
+    res.status(500).json({ error: 'Não foi possível enviar o email de confirmação.' })
   }
 }
 
