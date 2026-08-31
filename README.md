@@ -5,6 +5,7 @@
 **Aplicação web para acompanhar a Champions League com os amigos** — palpites, ranking ao vivo e
 classificação com o critério de desempate oficial da UEFA.
 
+[![Versao](https://img.shields.io/badge/vers%C3%A3o-1.0.0-38E1FF)](https://github.com/Vitallzin/bolao/releases)
 [![React](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)](https://vitejs.dev)
@@ -45,6 +46,7 @@ e-mail agendadas.
 - **Ranking** dos jogadores com destaque para o pódio, calculado no servidor e gravado no banco.
 - **Aba de regras** explicando a pontuação de cada fase e os prazos, gerada a partir da mesma tabela
   usada no cálculo — os valores exibidos nunca ficam desatualizados.
+- **Aba "Sobre"** apresentando o projeto, a versão publicada e o autor.
 - **Painel administrativo** completo — times, rodadas, mata-mata, estatísticas de jogadores, publicação de resultados e aprovação de usuários.
 - **Notificações por e-mail** configuráveis por jogador — aviso de rodada nova e lembrete de prazo, com envio automático agendado.
 

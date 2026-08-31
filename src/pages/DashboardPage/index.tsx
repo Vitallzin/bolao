@@ -3,6 +3,7 @@ import { AppHeader } from '../../components/AppHeader'
 import { EmptyState } from '../../components/EmptyState'
 import { NavigationTabs } from '../../components/NavigationTabs'
 import { AdminPage } from '../AdminPage'
+import { AboutPage } from './AboutPage'
 import { ChampionsPage } from './ChampionsPage'
 import { CompetitionPredictionsPage } from './CompetitionPredictionsPage'
 import { KnockoutPage } from './KnockoutPage'
@@ -287,6 +288,8 @@ export function DashboardPage({
       ) : null}
 
       {!adminMode && activeView === 'regras' ? <RulesPage /> : null}
+
+      {!adminMode && activeView === 'sobre' ? <AboutPage /> : null}
     </main>
   )
 }

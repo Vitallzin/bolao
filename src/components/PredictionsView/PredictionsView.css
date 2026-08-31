@@ -347,6 +347,16 @@
   .match-row {
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   }
+
+  /* Fora do lado a lado, Dia 1 e Dia 2 ficam empilhados: nao ha o que alinhar,
+     e a altura reservada so deixaria buracos no cartao. */
+  .match-days--scored .match-row {
+    min-height: 0;
+  }
+
+  .match-days--scored .score-group {
+    min-height: 0;
+  }
 }
 
 @media (max-width: 620px) {
@@ -363,17 +373,41 @@
     padding-top: 12px;
   }
 
-  /* Times em cima lado a lado, placares e pontos embaixo:
-     numa linha so nao cabe sem espremer tudo. */
+  /* Times em cima lado a lado, placares e pontos embaixo: numa linha so nao
+     cabe sem espremer tudo. As areas sao explicitas de proposito — deixando o
+     posicionamento automatico, o bloco de placares (que ocupa a linha inteira)
+     empurrava o time visitante para uma terceira linha, um em cima do outro. */
   .match-row {
     gap: 10px;
+    grid-template-areas:
+      'home away'
+      'scores scores'
+      'points points';
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     padding: 12px 10px;
   }
 
-  .match-scores,
-  .match-points {
-    grid-column: 1 / -1;
+  .match-row > :nth-child(1) {
+    grid-area: home;
+  }
+
+  .match-row > .match-scores {
+    grid-area: scores;
+  }
+
+  .match-row > :nth-child(3) {
+    grid-area: away;
+  }
+
+  .match-row > .match-points {
+    grid-area: points;
+  }
+
+  /* Linha dos times separada dos placares. */
+  .match-row > .match-scores {
+    border-top: 1px solid var(--app-line);
+    justify-content: center;
+    padding-top: 10px;
   }
 
   .match-scores {

@@ -12,7 +12,16 @@ export function RankingView({ lastScoredRoundId, players, ranking }: RankingView
   // Enquanto o servidor nao gravar o ranking, mostramos os jogadores zerados —
   // a lista nunca fica vazia so porque o calculo ainda nao rodou.
   const pending = ranking.length === 0
-  const entries: RankingEntry[] = pending ? buildPendingRanking(players) : ranking
+  // O nome vem do perfil atual, nao do que foi congelado no ranking: quem troca
+  // o apelido aparece com o nome novo sem esperar o proximo recalculo.
+  const profiles = new Map(players.map((player) => [player.id, player]))
+  const entries: RankingEntry[] = (pending ? buildPendingRanking(players) : ranking).map((entry) => {
+    const profile = profiles.get(entry.userId)
+
+    return profile
+      ? { ...entry, name: profile.name, photoURL: profile.photoURL ?? entry.photoURL }
+      : entry
+  })
 
   if (entries.length === 0) {
     return (

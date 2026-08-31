@@ -8,6 +8,7 @@ export type View =
   | 'statistics'
   | 'mata-mata'
   | 'regras'
+  | 'sobre'
 
 export type MatchStatus = 'scheduled' | 'finished'
 
