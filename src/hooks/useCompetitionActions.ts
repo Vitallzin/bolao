@@ -2,7 +2,10 @@ import type { FormEvent } from 'react'
 import {
   collection,
   deleteDoc,
+  deleteField,
   doc,
+  FieldPath,
+  getDocs,
   serverTimestamp,
   setDoc,
   Timestamp,
@@ -569,10 +572,49 @@ export function useCompetitionActions({
       await batch.commit()
     }
 
+    await clearRoundNotificationMarks(roundId)
+
     setMessage(
       `Rodada ${roundNumber} apagada (${roundMatches.length} jogo(s) e ${roundPredictions.length} palpite(s)).`,
     )
     await recalculateRankingAfterPublish()
+  }
+
+  /**
+   * O script de notificacao marca em cada usuario as rodadas ja avisadas, para nao
+   * mandar o mesmo email duas vezes. Como o id da rodada e sempre o mesmo
+   * (`round-1`), apagar e publicar de novo cairia na marca antiga e ninguem seria
+   * avisado — entao apagar a rodada tem que apagar a marca junto.
+   */
+  async function clearRoundNotificationMarks(roundId: string) {
+    const reminderKey = `round-${roundId}`
+    const usersSnapshot = await getDocs(collection(db, 'users'))
+    const marked = usersSnapshot.docs.filter((item) => {
+      const data = item.data()
+
+      return (
+        data.notifiedPublishedRounds?.[roundId] !== undefined ||
+        data.notifiedDeadlineReminders?.[reminderKey] !== undefined
+      )
+    })
+
+    // FieldPath em vez de string com ponto: o id tem hifen, e assim nao depende
+    // de como o caminho seria interpretado.
+    for (let index = 0; index < marked.length; index += 400) {
+      const batch = writeBatch(db)
+
+      marked.slice(index, index + 400).forEach((item) => {
+        batch.update(
+          item.ref,
+          new FieldPath('notifiedPublishedRounds', roundId),
+          deleteField(),
+          new FieldPath('notifiedDeadlineReminders', reminderKey),
+          deleteField(),
+        )
+      })
+
+      await batch.commit()
+    }
   }
 
   async function updateRealScore(

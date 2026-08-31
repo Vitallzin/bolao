@@ -386,6 +386,14 @@
   padding: 9px 12px;
 }
 
+/* Explicacao curta embaixo de um campo, sem o negrito do rotulo. */
+.account-field-hint {
+  color: var(--account-muted);
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
 .account-switch {
   align-items: center;
   background: #172d63;

@@ -1,6 +1,7 @@
 import { useRef, useState, type CSSProperties, type FormEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { Button } from '../Button'
+import { notificationTimeSlots, roundToNotificationSlot } from '../../constants'
 import type { NotificationPreferences, Player } from '../../types'
 import './AppHeader.css'
 
@@ -451,13 +452,22 @@ function NotificationSettings({
           </label>
           <label>
             Melhor horário para avisar
-            <input
-              type="time"
-              value={draft.preferredNotificationTime}
+            <select
+              value={roundToNotificationSlot(draft.preferredNotificationTime)}
               onChange={(event) =>
                 setDraft((current) => ({ ...current, preferredNotificationTime: event.target.value }))
               }
-            />
+            >
+              {notificationTimeSlots.map((slot) => (
+                <option key={slot.value} value={slot.value}>
+                  {slot.label}
+                </option>
+              ))}
+            </select>
+            <small className="account-field-hint">
+              O aviso sai na primeira verificação a partir desse horário, então pode chegar um pouco
+              depois.
+            </small>
           </label>
         </>
       ) : null}

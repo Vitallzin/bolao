@@ -8,7 +8,24 @@ const GMAIL_USER = requireEnv('GMAIL_USER')
 const GMAIL_APP_PASSWORD = requireEnv('GMAIL_APP_PASSWORD')
 const FROM_EMAIL = `Bolão da Champions <${GMAIL_USER}>`
 const TIMEZONE = 'America/Sao_Paulo'
-const PREFERRED_HOUR_TOLERANCE_MINUTES = 40
+/*
+ * Faixas de horario que o jogador escolhe nas configuracoes. O cron pede execucao de
+ * hora em hora, mas o GitHub atrasa e agrupa os agendamentos: na pratica o workflow
+ * roda a cada 3 a 6 horas, em horarios irregulares. Por isso o horario escolhido e o
+ * *inicio de um periodo do dia*, e nao um horario exato — o aviso sai na primeira
+ * execucao dentro daquele periodo. Com um horario cravado, quase nenhuma execucao
+ * caia perto dele e o lembrete simplesmente nunca saia.
+ *
+ * Copia deliberada de src/constants.ts — este script roda fora do app e nao importa
+ * de la. AO MUDAR ESTA LISTA, MUDE NOS DOIS LUGARES.
+ */
+const NOTIFICATION_SLOTS = ['08:00', '12:00', '18:00', '21:00']
+
+/*
+ * Valvula de seguranca: faltando pouco para o prazo, um email fora do horario
+ * preferido e melhor do que lembrete nenhum.
+ */
+const URGENT_DEADLINE_HOURS = 12
 
 const stageLabels = {
   playoffs: 'Playoffs',
@@ -208,7 +225,13 @@ async function notifyDeadlineReminder(user, { deadline, hasPredicted, key, label
   const reminderDays = typeof user.reminderDaysBefore === 'number' ? user.reminderDaysBefore : 2
   const reminderThreshold = new Date(deadline.getTime() - reminderDays * 24 * 60 * 60 * 1000)
 
-  if (now < reminderThreshold || !isWithinPreferredHour(user, now)) {
+  if (now < reminderThreshold) {
+    return
+  }
+
+  const hoursToDeadline = (deadline.getTime() - now.getTime()) / (60 * 60 * 1000)
+
+  if (hoursToDeadline > URGENT_DEADLINE_HOURS && !isWithinPreferredWindow(user, now)) {
     return
   }
 
@@ -235,19 +258,51 @@ async function notifyDeadlineReminder(user, { deadline, hasPredicted, key, label
   user.notifiedDeadlineReminders = { ...(user.notifiedDeadlineReminders || {}), [key]: true }
 }
 
-function isWithinPreferredHour(user, now) {
-  const preferredTime = typeof user.preferredNotificationTime === 'string' ? user.preferredNotificationTime : '18:00'
-  const [hours, minutes] = preferredTime.split(':').map(Number)
-
-  if (Number.isNaN(hours) || Number.isNaN(minutes)) {
-    return true
-  }
-
+/**
+ * Agora estamos dentro do periodo escolhido pelo jogador? O periodo vai do horario
+ * escolhido ate o inicio do proximo da lista (o ultimo vai ate a meia-noite), entao
+ * a janela nunca atravessa a madrugada — ninguem recebe email as 3 da manha.
+ */
+function isWithinPreferredWindow(user, now) {
+  const slotIndex = resolveSlotIndex(user.preferredNotificationTime)
+  const start = toMinutesOfDay(NOTIFICATION_SLOTS[slotIndex])
+  const nextSlot = NOTIFICATION_SLOTS[slotIndex + 1]
+  const end = nextSlot ? toMinutesOfDay(nextSlot) : 24 * 60
   const nowInTz = new Date(now.toLocaleString('en-US', { timeZone: TIMEZONE }))
-  const preferredMinutesOfDay = hours * 60 + minutes
   const nowMinutesOfDay = nowInTz.getHours() * 60 + nowInTz.getMinutes()
 
-  return Math.abs(nowMinutesOfDay - preferredMinutesOfDay) <= PREFERRED_HOUR_TOLERANCE_MINUTES
+  return nowMinutesOfDay >= start && nowMinutesOfDay < end
+}
+
+/**
+ * Aproxima o horario salvo da faixa mais proxima. Contas antigas guardaram um horario
+ * livre, de quando o campo era um input de hora, entao nem sempre e uma das opcoes.
+ */
+function resolveSlotIndex(preferredTime) {
+  const target = toMinutesOfDay(preferredTime)
+
+  if (target === null) {
+    return NOTIFICATION_SLOTS.indexOf('18:00')
+  }
+
+  let bestIndex = 0
+
+  NOTIFICATION_SLOTS.forEach((slot, index) => {
+    const distance = Math.abs(toMinutesOfDay(slot) - target)
+    const bestDistance = Math.abs(toMinutesOfDay(NOTIFICATION_SLOTS[bestIndex]) - target)
+
+    if (distance < bestDistance) {
+      bestIndex = index
+    }
+  })
+
+  return bestIndex
+}
+
+function toMinutesOfDay(time) {
+  const [hours, minutes] = String(time).split(':').map(Number)
+
+  return Number.isFinite(hours) && Number.isFinite(minutes) ? hours * 60 + minutes : null
 }
 
 function toDate(value) {

@@ -63,3 +63,27 @@ FIREBASE_SERVICE_ACCOUNT='{"...": "..."}' GMAIL_USER=bolao@gmail.com GMAIL_APP_P
 
 Cada usuario, no Firestore (`users/{uid}`), guarda `notifiedPublishedRounds` e `notifiedDeadlineReminders`
 com as chaves ja avisadas. O script confere isso antes de mandar.
+
+Apagar uma rodada no painel do admin limpa essas marcas (`clearRoundNotificationMarks`, em
+`src/hooks/useCompetitionActions.ts`). Sem isso, republicar a mesma rodada — o id e sempre `round-1`,
+`round-2`... — cairia na marca antiga e ninguem seria avisado.
+
+## Sobre o horario dos avisos
+
+O cron pede execucao de hora em hora, mas o GitHub atrasa e agrupa os agendamentos: na pratica o
+workflow roda a cada 3 a 6 horas, em horarios irregulares. Por isso o jogador nao escolhe um horario
+livre, e sim uma **faixa do dia** (`notificationTimeSlots`, em `src/constants.ts`):
+
+| Faixa | Aviso sai entre |
+| --- | --- |
+| De manha | 08:00 e 12:00 |
+| Meio-dia | 12:00 e 18:00 |
+| Fim de tarde | 18:00 e 21:00 |
+| A noite | 21:00 e meia-noite |
+
+O lembrete sai na primeira execucao dentro da faixa. Como nenhuma faixa atravessa a meia-noite,
+ninguem recebe email de madrugada. Contas antigas guardaram um horario livre, de quando o campo era um
+input de hora — esse valor e aproximado para a faixa mais proxima.
+
+Faltando 12 horas ou menos para o prazo, o lembrete sai na primeira execucao, ignorando o horario
+preferido: melhor um email fora de hora do que lembrete nenhum.
