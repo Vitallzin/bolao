@@ -146,7 +146,11 @@ service cloud.firestore {
           && request.resource.data.userId == request.auth.uid
           && beforeCompetitionPredictionDeadline(competitionId);
 
-        allow update: if false;
+        // Jogador nao reedita o que enviou. So o admin corrige, para padronizar a
+        // grafia dos nomes sem trocar o dono da previsao.
+        allow update: if isAdmin()
+          && request.resource.data.userId == resource.data.userId;
+
         allow delete: if isAdmin() || resource.data.userId == request.auth.uid;
       }
 

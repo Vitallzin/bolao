@@ -1,14 +1,34 @@
 import { useState, type FormEvent } from 'react'
-import type { CompetitionPredictionResult, KnockoutTie, Match, Player, PlayerStat, Round, Team } from '../../types'
+import type {
+  CompetitionPrediction,
+  CompetitionPredictionResult,
+  KnockoutTie,
+  Match,
+  Player,
+  PlayerStat,
+  Prediction,
+  Round,
+  Team,
+} from '../../types'
 import { CompetitionPredictionsPage } from './CompetitionPredictionsPage'
 import { KnockoutPage } from './KnockoutPage'
+import { PlayerPredictionsPage } from './PlayerPredictionsPage'
 import { PlayersPage } from './PlayersPage'
 import { PlayerStatsPage } from './PlayerStatsPage'
+import { RoundPredictionsPage } from './RoundPredictionsPage'
 import { RoundsPage } from './RoundsPage'
 import { TeamsPage } from './TeamsPage'
 import './AdminPage.css'
 
-type AdminSection = 'teams' | 'rounds' | 'knockout' | 'player-stats' | 'competition-predictions' | 'players'
+type AdminSection =
+  | 'teams'
+  | 'rounds'
+  | 'round-predictions'
+  | 'knockout'
+  | 'player-stats'
+  | 'competition-predictions'
+  | 'player-predictions'
+  | 'players'
 
 export type KnockoutScoreField =
   | 'homeLegHomeScore'
@@ -19,6 +39,7 @@ export type KnockoutScoreField =
 type AdminPageProps = {
   competitionPredictionDeadline?: Date | null
   competitionPredictionResult?: CompetitionPredictionResult
+  competitionPredictions: CompetitionPrediction[]
   knockout: KnockoutTie[]
   matches: Match[]
   onAddKnockoutTie: (event: FormEvent<HTMLFormElement>) => void
@@ -38,6 +59,7 @@ type AdminPageProps = {
   onPublishScore: (matchId: string) => void
   onPublishCompetitionPredictionResult: () => void
   onSaveCompetitionPredictionDeadline: (value: string) => void
+  onSaveCompetitionPredictionForPlayer: (userId: string, event: FormEvent<HTMLFormElement>) => void
   onRealScoreChange: (matchId: string, side: 'realHomeScore' | 'realAwayScore', value: string) => void
   onSaveCompetitionPredictionResult: (event: FormEvent<HTMLFormElement>) => void
   onSaveRound: (
@@ -51,6 +73,7 @@ type AdminPageProps = {
   onWinnerChange: (tieId: string, winnerTeamId: string) => void
   playerStats: PlayerStat[]
   players: Player[]
+  predictions: Prediction[]
   rounds: Round[]
   teamMap: Map<string, Team>
   teams: Team[]
@@ -60,14 +83,17 @@ const adminSections: Array<{ id: AdminSection; label: string }> = [
   { id: 'players', label: 'Jogadores' },
   { id: 'teams', label: 'Cadastrar time' },
   { id: 'rounds', label: 'Rodadas' },
+  { id: 'round-predictions', label: 'Palpites da rodada' },
   { id: 'knockout', label: 'Mata-mata' },
   { id: 'player-stats', label: 'Artilharia' },
   { id: 'competition-predictions', label: 'Previsões' },
+  { id: 'player-predictions', label: 'Previsões dos jogadores' },
 ]
 
 export function AdminPage({
   competitionPredictionDeadline,
   competitionPredictionResult,
+  competitionPredictions,
   knockout,
   matches,
   onAddKnockoutTie,
@@ -87,6 +113,7 @@ export function AdminPage({
   onPublishScore,
   onPublishCompetitionPredictionResult,
   onSaveCompetitionPredictionDeadline,
+  onSaveCompetitionPredictionForPlayer,
   onRealScoreChange,
   onSaveCompetitionPredictionResult,
   onSaveRound,
@@ -96,6 +123,7 @@ export function AdminPage({
   onWinnerChange,
   playerStats,
   players,
+  predictions,
   rounds,
   teamMap,
   teams,
@@ -155,6 +183,15 @@ export function AdminPage({
         />
       ) : null}
 
+      {activeSection === 'round-predictions' ? (
+        <RoundPredictionsPage
+          matches={matches}
+          players={players}
+          predictions={predictions}
+          rounds={rounds}
+        />
+      ) : null}
+
       {activeSection === 'knockout' ? (
         <KnockoutPage
           knockout={knockout}
@@ -190,6 +227,16 @@ export function AdminPage({
           onPublishCompetitionPredictionResult={onPublishCompetitionPredictionResult}
           onSaveCompetitionPredictionDeadline={onSaveCompetitionPredictionDeadline}
           onSaveCompetitionPredictionResult={onSaveCompetitionPredictionResult}
+        />
+      ) : null}
+
+      {activeSection === 'player-predictions' ? (
+        <PlayerPredictionsPage
+          competitionPredictions={competitionPredictions}
+          players={players}
+          playerStats={playerStats}
+          teams={teams}
+          onSaveCompetitionPredictionForPlayer={onSaveCompetitionPredictionForPlayer}
         />
       ) : null}
     </section>

@@ -245,6 +245,7 @@ function App() {
       onKnockoutTeamSlotChange={actions.updateKnockoutTeamSlot}
       onPublishCompetitionPredictionResult={actions.publishCompetitionPredictionResult}
       onSaveCompetitionPredictionDeadline={actions.saveCompetitionPredictionDeadline}
+      onSaveCompetitionPredictionForPlayer={actions.saveCompetitionPredictionForPlayer}
       onSaveCompetitionPredictionResult={actions.saveCompetitionPredictionResult}
       onSubmitCompetitionPrediction={actions.submitCompetitionPrediction}
       onUpdatePlayerStat={actions.updatePlayerStat}

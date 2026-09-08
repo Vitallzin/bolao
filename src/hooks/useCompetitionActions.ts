@@ -228,6 +228,64 @@ export function useCompetitionActions({
     setMessage('Resultado das previsões salvo.')
   }
 
+  /**
+   * Edicao do admin nas previsoes ja enviadas por um jogador. Existe para padronizar
+   * a grafia dos nomes antes da pontuacao — o prazo do jogador continua fechado.
+   */
+  async function saveCompetitionPredictionForPlayer(userId: string, event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    if (currentUser?.role !== 'admin') {
+      return
+    }
+
+    const existing = competitionPredictions.find((prediction) => prediction.userId === userId)
+
+    if (!existing) {
+      setMessage('Esse jogador ainda não enviou as previsões da competição.')
+      return
+    }
+
+    const data = new FormData(event.currentTarget)
+    const topScorers = getPredictionList(data, 'topScorers')
+    const topAssists = getPredictionList(data, 'topAssists')
+    const bestPlayer = String(data.get('bestPlayer') || '').trim()
+    const bestGoalkeeper = String(data.get('bestGoalkeeper') || '').trim()
+    const championTeamId = String(data.get('championTeamId') || '')
+    const runnerUpTeamId = String(data.get('runnerUpTeamId') || '')
+
+    if (
+      topScorers.some((item) => !item) ||
+      topAssists.some((item) => !item) ||
+      !bestPlayer ||
+      !bestGoalkeeper ||
+      !championTeamId ||
+      !runnerUpTeamId ||
+      hasDuplicateNames(topScorers) ||
+      hasDuplicateNames(topAssists) ||
+      championTeamId === runnerUpTeamId
+    ) {
+      setMessage('Preencha todas as previsões do jogador sem repetir nomes ou times.')
+      return
+    }
+
+    await updateDoc(doc(db, 'competitions', competitionId, 'competitionPredictions', existing.id), {
+      topScorers,
+      topAssists,
+      bestPlayer,
+      bestGoalkeeper,
+      championTeamId,
+      runnerUpTeamId,
+      updatedAt: serverTimestamp(),
+      updatedByAdmin: currentUser.id,
+    })
+    setMessage('Previsões do jogador atualizadas.')
+
+    if (competitionPredictionResult?.published) {
+      await recalculateRankingAfterPublish()
+    }
+  }
+
   /** Prazo proprio das previsoes da competicao, separado das rodadas. */
   async function saveCompetitionPredictionDeadline(value: string) {
     if (!value) {
@@ -1027,6 +1085,7 @@ export function useCompetitionActions({
     recalculateRanking,
     publishKnockoutScore,
     saveCompetitionPredictionDeadline,
+    saveCompetitionPredictionForPlayer,
     saveCompetitionPredictionResult,
     saveRound,
     saveRoundOf16,

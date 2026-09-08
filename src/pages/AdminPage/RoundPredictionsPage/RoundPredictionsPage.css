@@ -1,0 +1,113 @@
+.round-predictions-manager {
+  display: grid;
+  gap: 16px;
+}
+
+.round-predictions-summary {
+  justify-self: end;
+}
+
+.round-predictions-summary .is-complete {
+  border-color: rgba(74, 222, 128, 0.4);
+  color: #bbf7d0;
+}
+
+.round-predictions-summary .is-missing {
+  border-color: rgba(248, 113, 113, 0.4);
+  color: #fecaca;
+}
+
+.round-predictions-panel {
+  align-content: start;
+}
+
+.round-predictions-panel .round-of-16-heading p {
+  margin: 6px 0 0;
+  font-size: 0.86rem;
+}
+
+.round-predictions-list {
+  display: grid;
+  gap: 10px;
+}
+
+.round-prediction-row {
+  align-items: center;
+  background: rgba(226, 242, 255, 0.08);
+  border: 1px solid rgba(186, 230, 253, 0.14);
+  border-radius: 10px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  padding: 12px;
+}
+
+.round-prediction-row > div {
+  display: grid;
+  min-width: 0;
+}
+
+.round-prediction-row strong {
+  color: var(--app-title);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.round-prediction-row > div span {
+  color: var(--app-muted);
+  font-size: 0.86rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.round-prediction-count {
+  color: var(--app-title);
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+}
+
+.round-prediction-pill {
+  border: 1px solid rgba(186, 230, 253, 0.18);
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 6px 12px;
+  white-space: nowrap;
+}
+
+.round-prediction-row.is-complete .round-prediction-pill {
+  background: rgba(34, 197, 94, 0.16);
+  border-color: rgba(74, 222, 128, 0.42);
+  color: #bbf7d0;
+}
+
+.round-prediction-row.is-partial .round-prediction-pill {
+  background: rgba(250, 204, 21, 0.14);
+  border-color: rgba(250, 204, 21, 0.4);
+  color: #fef08a;
+}
+
+.round-prediction-row.is-none .round-prediction-pill {
+  background: rgba(239, 68, 68, 0.14);
+  border-color: rgba(248, 113, 113, 0.4);
+  color: #fecaca;
+}
+
+@media (max-width: 900px) {
+  .round-predictions-summary {
+    justify-self: stretch;
+  }
+}
+
+@media (max-width: 620px) {
+  .round-prediction-row {
+    grid-template-columns: 1fr auto;
+  }
+
+  .round-prediction-pill {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}

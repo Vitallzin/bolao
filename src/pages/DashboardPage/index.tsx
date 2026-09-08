@@ -70,6 +70,7 @@ type DashboardPageProps = {
   onPredictionChange: (matchId: string, side: 'homeScore' | 'awayScore', value: string) => void
   onPublishCompetitionPredictionResult: () => void
   onSaveCompetitionPredictionDeadline: (value: string) => void
+  onSaveCompetitionPredictionForPlayer: (userId: string, event: FormEvent<HTMLFormElement>) => void
   onPublishKnockoutScore: (tieId: string, leg?: 'home' | 'away') => void
   onDeleteRound: (roundNumber: number) => void
   onPublishRound: (roundNumber: number, deadline: string) => void
@@ -134,6 +135,7 @@ export function DashboardPage({
   onPredictionChange,
   onPublishCompetitionPredictionResult,
   onSaveCompetitionPredictionDeadline,
+  onSaveCompetitionPredictionForPlayer,
   onPublishKnockoutScore,
   onDeleteRound,
   onPublishRound,
@@ -201,10 +203,12 @@ export function DashboardPage({
         <AdminPage
           competitionPredictionDeadline={competitionPredictionDeadline}
           competitionPredictionResult={competitionPredictionResult}
+          competitionPredictions={competitionPredictions}
           matches={matches}
           knockout={knockout}
           playerStats={playerStats}
           players={players}
+          predictions={predictions}
           rounds={rounds}
           teams={teams}
           teamMap={teamMap}
@@ -220,6 +224,7 @@ export function DashboardPage({
           onKnockoutLegDeadlineChange={onKnockoutLegDeadlineChange}
           onPublishCompetitionPredictionResult={onPublishCompetitionPredictionResult}
           onSaveCompetitionPredictionDeadline={onSaveCompetitionPredictionDeadline}
+          onSaveCompetitionPredictionForPlayer={onSaveCompetitionPredictionForPlayer}
           onPublishKnockoutScore={onPublishKnockoutScore}
           onDeleteRound={onDeleteRound}
           onPublishRound={onPublishRound}
