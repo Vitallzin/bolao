@@ -247,6 +247,7 @@ export function DashboardPage({
             knockout={knockout}
             knockoutPredictions={knockoutPredictions}
             matches={matches}
+            players={players}
             predictions={predictions}
             ranking={ranking}
             rounds={publishedRounds}

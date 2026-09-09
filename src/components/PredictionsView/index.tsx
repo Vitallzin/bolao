@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { EmptyState } from '../EmptyState'
 import { TeamBadge } from '../TeamBadge'
 import { KnockoutPredictionCard } from '../../pages/DashboardPage/KnockoutPage/components/KnockoutPredictionCard'
@@ -28,6 +28,7 @@ type PredictionsViewProps = {
     value: string,
   ) => void
   onPredictionChange: (matchId: string, side: 'homeScore' | 'awayScore', value: string) => void
+  players: Player[]
   predictions: Prediction[]
   ranking: RankingEntry[]
   rounds: Round[]
@@ -41,6 +42,7 @@ export function PredictionsView({
   matches,
   onKnockoutPredictionChange,
   onPredictionChange,
+  players,
   predictions,
   ranking,
   rounds,
@@ -48,6 +50,9 @@ export function PredictionsView({
 }: PredictionsViewProps) {
   const steps = useMemo(() => buildPredictionSteps(rounds, knockout), [knockout, rounds])
   const [activeStepIndex, setActiveStepIndex] = useState(0)
+  // Fica aqui em cima para o jogador escolhido nao se perder ao alternar de volta
+  // para os proprios palpites, nem ao trocar de rodada.
+  const [othersUserId, setOthersUserId] = useState('')
   const activeStep = steps[activeStepIndex]
 
   useEffect(() => {
@@ -93,11 +98,15 @@ export function PredictionsView({
       ) : activeStep.kind === 'round' ? (
         <RoundPredictions
           currentUser={currentUser}
+          key={activeStep.round.id}
           matches={matches.filter((match) => match.roundId === activeStep.round.id)}
+          othersUserId={othersUserId}
+          players={players}
           predictions={predictions}
           ranking={ranking}
           round={activeStep.round}
           teamMap={teamMap}
+          onOthersUserChange={setOthersUserId}
           onPredictionChange={onPredictionChange}
         />
       ) : (
@@ -118,7 +127,10 @@ export function PredictionsView({
 function RoundPredictions({
   currentUser,
   matches,
+  onOthersUserChange,
   onPredictionChange,
+  othersUserId,
+  players,
   predictions,
   ranking,
   round,
@@ -126,13 +138,17 @@ function RoundPredictions({
 }: {
   currentUser: Player
   matches: Match[]
+  onOthersUserChange: (userId: string) => void
   onPredictionChange: (matchId: string, side: 'homeScore' | 'awayScore', value: string) => void
+  othersUserId: string
+  players: Player[]
   predictions: Prediction[]
   ranking: RankingEntry[]
   round: Round
   teamMap: Map<string, Team>
 }) {
   const locked = new Date() >= round.deadline
+  const [viewMode, setViewMode] = useState<'mine' | 'others'>('mine')
   const matchesByDay = [1, 2].map((day) => ({
     day,
     matches: matches.filter((match) => match.day === day),
@@ -161,102 +177,314 @@ function RoundPredictions({
     )
   }
 
+  // Ver o palpite dos outros so depois do prazo, senao daria para copiar.
+  const showingOthers = locked && viewMode === 'others'
+  // Fica na linha dos pontos, alinhado a direita: no desktop cai logo abaixo
+  // do seletor de rodada, que e o que o cabecalho tem naquele canto.
+  const audienceToggle = locked ? (
+    <div className="leg-toggle predictions-audience-toggle" role="tablist" aria-label="De quem são os palpites">
+      <button
+        className={viewMode === 'mine' ? 'active' : ''}
+        type="button"
+        role="tab"
+        aria-selected={viewMode === 'mine'}
+        onClick={() => setViewMode('mine')}
+      >
+        Meus palpites
+      </button>
+      <button
+        className={viewMode === 'others' ? 'active' : ''}
+        type="button"
+        role="tab"
+        aria-selected={viewMode === 'others'}
+        onClick={() => setViewMode('others')}
+      >
+        Palpites dos jogadores
+      </button>
+    </div>
+  ) : null
+
   return (
     <>
-      <div className="round-status-line">
-        <span className={locked ? 'status-pill status-pill--locked' : 'status-pill'}>
-          {locked ? 'Fechada' : `Aberta até ${formatDateTime(round.deadline)}`}
-        </span>
+      {showingOthers ? (
+        <OtherPlayersPredictions
+          audienceToggle={audienceToggle}
+          currentUser={currentUser}
+          hasResults={hasResults}
+          matches={matches}
+          players={players}
+          predictions={predictions}
+          selectedUserId={othersUserId}
+          teamMap={teamMap}
+          onSelectedUserChange={onOthersUserChange}
+        />
+      ) : (
+        <>
+          <div className="round-status-line predictions-status-line">
+            <span className={locked ? 'status-pill status-pill--locked' : 'status-pill'}>
+              {locked ? 'Fechada' : `Aberta até ${formatDateTime(round.deadline)}`}
+            </span>
 
-        {hasResults ? (
-          <div className="round-score-summary">
-            <div className="round-score-summary__points">
-              <strong>{myRoundPoints}</strong>
-              <span>pts nessa rodada</span>
+            <div className="round-status-line__right">
+              {hasResults ? (
+                <div className="round-score-summary">
+                  <div className="round-score-summary__points">
+                    <strong>{myRoundPoints}</strong>
+                    <span>pts nessa rodada</span>
+                  </div>
+                  {roundStanding ? (
+                    <div className="round-score-summary__position">
+                      <strong>{roundStanding.position}º</strong>
+                      <span>de {roundStanding.total} na rodada</span>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+              {audienceToggle}
             </div>
-            {roundStanding ? (
-              <div className="round-score-summary__position">
-                <strong>{roundStanding.position}º</strong>
-                <span>de {roundStanding.total} na rodada</span>
+          </div>
+          {/* Com resultado as linhas ganham rotulo e etiqueta de pontos; a classe abaixo
+              iguala a altura de todas para o Dia 1 e o Dia 2 ficarem alinhados. */}
+          <div className={hasResults ? 'match-days match-days--scored' : 'match-days'}>
+            {matchesByDay.map(({ day, matches: dayMatches }) => (
+              <section className="match-day" key={day}>
+                <h3>Dia {day}</h3>
+                <div className="match-list">
+                  {dayMatches.map((match) => {
+                    const prediction = predictions.find(
+                      (item) => item.userId === currentUser.id && item.matchId === match.id,
+                    )
+                    const finished =
+                      match.status === 'finished' &&
+                      typeof match.realHomeScore === 'number' &&
+                      typeof match.realAwayScore === 'number'
+                    const matchPoints = finished && prediction
+                      ? calculatePredictionPoints(prediction, match)
+                      : null
+
+                    // Cravou o placar? Mostrar o placar real seria repetir o mesmo numero.
+                    const showRealScore = finished && matchPoints !== stagePointTables.early.exact
+
+                    return (
+                      <article className="match-row" key={match.id}>
+                        <TeamBadge team={teamMap.get(match.homeTeamId)} />
+
+                        <div className="match-scores">
+                          <div className="score-group">
+                            {showRealScore ? <span className="score-group__label">Meu palpite</span> : null}
+                            <div className="score-group__values">
+                              <input
+                                aria-label={`Palpite ${teamMap.get(match.homeTeamId)?.name}`}
+                                disabled={locked}
+                                min="0"
+                                placeholder="0"
+                                type="number"
+                                value={prediction?.homeScore ?? ''}
+                                onChange={(event) => onPredictionChange(match.id, 'homeScore', event.target.value)}
+                              />
+                              <span className="versus">x</span>
+                              <input
+                                aria-label={`Palpite ${teamMap.get(match.awayTeamId)?.name}`}
+                                disabled={locked}
+                                min="0"
+                                placeholder="0"
+                                type="number"
+                                value={prediction?.awayScore ?? ''}
+                                onChange={(event) => onPredictionChange(match.id, 'awayScore', event.target.value)}
+                              />
+                            </div>
+                          </div>
+
+                          {showRealScore ? (
+                            <div className="score-group score-group--real">
+                              <span className="score-group__label">Placar real</span>
+                              <div className="score-group__values">
+                                <span className="score-box">{match.realHomeScore}</span>
+                                <span className="versus">x</span>
+                                <span className="score-box">{match.realAwayScore}</span>
+                              </div>
+                            </div>
+                          ) : null}
+                        </div>
+
+                        <TeamBadge team={teamMap.get(match.awayTeamId)} align="right" />
+
+                        {matchPoints !== null ? <MatchPoints points={matchPoints} /> : null}
+                      </article>
+                    )
+                  })}
+                </div>
+              </section>
+            ))}
+          </div>
+
+          {hasResults ? <PointsLegend /> : null}
+        </>
+      )}
+    </>
+  )
+}
+
+/**
+ * Palpites de um jogador por vez, so leitura. So chega aqui com a rodada
+ * fechada — a checagem do prazo fica em RoundPredictions.
+ */
+function OtherPlayersPredictions({
+  audienceToggle,
+  currentUser,
+  hasResults,
+  matches,
+  onSelectedUserChange,
+  players,
+  predictions,
+  selectedUserId,
+  teamMap,
+}: {
+  audienceToggle: ReactNode
+  currentUser: Player
+  hasResults: boolean
+  matches: Match[]
+  onSelectedUserChange: (userId: string) => void
+  players: Player[]
+  predictions: Prediction[]
+  selectedUserId: string
+  teamMap: Map<string, Team>
+}) {
+  const others = useMemo(
+    () =>
+      players
+        .filter((player) => player.id !== currentUser.id && player.approved)
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    [currentUser.id, players],
+  )
+  const selectedIndex = others.findIndex((player) => player.id === selectedUserId)
+  const currentIndex = selectedIndex >= 0 ? selectedIndex : 0
+  const selected = others[currentIndex]
+
+  const selectedPredictions = useMemo(
+    () => (selected ? predictions.filter((item) => item.userId === selected.id) : []),
+    [predictions, selected],
+  )
+  const roundPoints = matches.reduce((total, match) => {
+    const prediction = selectedPredictions.find((item) => item.matchId === match.id)
+
+    return prediction && match.status === 'finished'
+      ? total + calculatePredictionPoints(prediction, match)
+      : total
+  }, 0)
+  const filledCount = matches.filter((match) =>
+    selectedPredictions.some((item) => item.matchId === match.id),
+  ).length
+
+  if (others.length === 0) {
+    return (
+      <EmptyState
+        title="Ninguém mais por aqui"
+        text="Quando outros jogadores entrarem no bolão, os palpites deles aparecem nessa aba."
+      />
+    )
+  }
+
+  return (
+    <>
+      <div className="round-status-line predictions-status-line">
+        <div className="round-nav others-player-nav">
+          <button
+            type="button"
+            disabled={currentIndex === 0}
+            onClick={() => onSelectedUserChange(others[currentIndex - 1].id)}
+          >
+            &lt;
+          </button>
+          <h2>{selected.name}</h2>
+          <button
+            type="button"
+            disabled={currentIndex === others.length - 1}
+            onClick={() => onSelectedUserChange(others[currentIndex + 1].id)}
+          >
+            &gt;
+          </button>
+        </div>
+
+        <div className="round-status-line__right">
+          <div className="round-score-summary">
+            <div className="round-score-summary__filled">
+              <strong>
+                {filledCount}/{matches.length}
+              </strong>
+              <span>jogos palpitados</span>
+            </div>
+            {hasResults ? (
+              <div className="round-score-summary__points">
+                <strong>{roundPoints}</strong>
+                <span>pts nessa rodada</span>
               </div>
             ) : null}
           </div>
-        ) : null}
+          {audienceToggle}
+        </div>
       </div>
-      {/* Com resultado as linhas ganham rotulo e etiqueta de pontos; a classe abaixo
-          iguala a altura de todas para o Dia 1 e o Dia 2 ficarem alinhados. */}
+
       <div className={hasResults ? 'match-days match-days--scored' : 'match-days'}>
-        {matchesByDay.map(({ day, matches: dayMatches }) => (
+        {[1, 2].map((day) => (
           <section className="match-day" key={day}>
             <h3>Dia {day}</h3>
             <div className="match-list">
-              {dayMatches.map((match) => {
-                const prediction = predictions.find(
-                  (item) => item.userId === currentUser.id && item.matchId === match.id,
-                )
-                const finished =
-                  match.status === 'finished' &&
-                  typeof match.realHomeScore === 'number' &&
-                  typeof match.realAwayScore === 'number'
-                const matchPoints = finished && prediction
-                  ? calculatePredictionPoints(prediction, match)
-                  : null
+              {matches
+                .filter((match) => match.day === day)
+                .map((match) => {
+                  const prediction = selectedPredictions.find((item) => item.matchId === match.id)
+                  const finished =
+                    match.status === 'finished' &&
+                    typeof match.realHomeScore === 'number' &&
+                    typeof match.realAwayScore === 'number'
+                  const matchPoints = finished && prediction
+                    ? calculatePredictionPoints(prediction, match)
+                    : null
+                  const showRealScore = finished && matchPoints !== stagePointTables.early.exact
 
-                // Cravou o placar? Mostrar o placar real seria repetir o mesmo numero.
-                const showRealScore = finished && matchPoints !== stagePointTables.early.exact
+                  return (
+                    <article className="match-row" key={match.id}>
+                      <TeamBadge team={teamMap.get(match.homeTeamId)} />
 
-                return (
-                  <article className="match-row" key={match.id}>
-                    <TeamBadge team={teamMap.get(match.homeTeamId)} />
-
-                    <div className="match-scores">
-                      <div className="score-group">
-                        {showRealScore ? <span className="score-group__label">Meu palpite</span> : null}
-                        <div className="score-group__values">
-                          <input
-                            aria-label={`Palpite ${teamMap.get(match.homeTeamId)?.name}`}
-                            disabled={locked}
-                            min="0"
-                            placeholder="0"
-                            type="number"
-                            value={prediction?.homeScore ?? ''}
-                            onChange={(event) => onPredictionChange(match.id, 'homeScore', event.target.value)}
-                          />
-                          <span className="versus">x</span>
-                          <input
-                            aria-label={`Palpite ${teamMap.get(match.awayTeamId)?.name}`}
-                            disabled={locked}
-                            min="0"
-                            placeholder="0"
-                            type="number"
-                            value={prediction?.awayScore ?? ''}
-                            onChange={(event) => onPredictionChange(match.id, 'awayScore', event.target.value)}
-                          />
-                        </div>
-                      </div>
-
-                      {showRealScore ? (
-                        <div className="score-group score-group--real">
-                          <span className="score-group__label">Placar real</span>
+                      <div className="match-scores">
+                        <div className="score-group">
+                          {showRealScore ? <span className="score-group__label">Palpite</span> : null}
                           <div className="score-group__values">
-                            <span className="score-box">{match.realHomeScore}</span>
+                            <span className="score-box">{prediction?.homeScore ?? '–'}</span>
                             <span className="versus">x</span>
-                            <span className="score-box">{match.realAwayScore}</span>
+                            <span className="score-box">{prediction?.awayScore ?? '–'}</span>
                           </div>
                         </div>
-                      ) : null}
-                    </div>
 
-                    <TeamBadge team={teamMap.get(match.awayTeamId)} align="right" />
+                        {showRealScore ? (
+                          <div className="score-group score-group--real">
+                            <span className="score-group__label">Placar real</span>
+                            <div className="score-group__values">
+                              <span className="score-box">{match.realHomeScore}</span>
+                              <span className="versus">x</span>
+                              <span className="score-box">{match.realAwayScore}</span>
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
 
-                    {matchPoints !== null ? <MatchPoints points={matchPoints} /> : null}
-                  </article>
-                )
-              })}
+                      <TeamBadge team={teamMap.get(match.awayTeamId)} align="right" />
+
+                      {matchPoints !== null ? <MatchPoints points={matchPoints} /> : null}
+                    </article>
+                  )
+                })}
             </div>
           </section>
         ))}
       </div>
+
+      {filledCount === 0 ? (
+        <p className="muted-text others-empty-note">
+          {selected.name} não palpitou nessa rodada.
+        </p>
+      ) : null}
 
       {hasResults ? <PointsLegend /> : null}
     </>

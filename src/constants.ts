@@ -1,9 +1,13 @@
+import { releases } from './changelog'
 import type { NotificationPreferences, View } from './types'
 
 export const competitionId = 'champions-2026'
 
-/** Versao do site, mostrada na aba Sobre. Espelha o "version" do package.json. */
-export const appVersion = '1.0.0'
+/**
+ * Versao do site, mostrada na aba Sobre. Sai da primeira entrada do changelog,
+ * que e sempre a mais recente. Espelha o "version" do package.json.
+ */
+export const appVersion = releases[0].version
 
 export const githubUrl = 'https://github.com/Vitallzin'
 

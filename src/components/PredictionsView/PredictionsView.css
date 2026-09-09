@@ -426,3 +426,67 @@
     min-width: 38px;
   }
 }
+
+/* Alternador "meus palpites / palpites dos jogadores". Vive na linha dos pontos
+   e, no desktop, encosta a direita — logo abaixo do seletor de rodada. So
+   aparece com a rodada fechada. */
+.round-status-line__right {
+  align-items: center;
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-left: auto;
+}
+
+/* O .round-status-line do admin (CSS global) tras justify-self: start, que aqui
+   encolhia a linha ate o tamanho do conteudo — e ai a direita nao era a borda da
+   coluna, mas o fim dos boxes de pontos. Esta classe devolve a largura total. */
+.predictions-status-line {
+  justify-self: stretch;
+  width: 100%;
+}
+
+/* Encostado na borda direita da coluna de conteudo — a mesma do seletor de
+   rodada la em cima — independente de quantos boxes de pontos aparecem. */
+.predictions-audience-toggle {
+  margin: 0 0 0 auto;
+}
+
+.others-player-nav {
+  justify-self: start;
+  margin: 0;
+}
+
+.others-player-nav h2 {
+  font-size: 1.15rem;
+  margin: 0;
+  min-width: 150px;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.round-score-summary__filled strong {
+  color: #9becff;
+}
+
+.others-empty-note {
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .others-player-nav {
+    justify-self: center;
+  }
+
+  /* Fora do desktop nao ha seletor de rodada no canto para acompanhar:
+     o alternador ocupa a linha inteira, centralizado. */
+  .round-status-line__right {
+    justify-content: center;
+    margin-left: 0;
+    width: 100%;
+  }
+}

@@ -23,6 +23,7 @@ type PredictionsPageProps = {
     value: string,
   ) => void
   onPredictionChange: (matchId: string, side: 'homeScore' | 'awayScore', value: string) => void
+  players: Player[]
   predictions: Prediction[]
   ranking: RankingEntry[]
   rounds: Round[]

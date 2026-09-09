@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { releases } from '../../../changelog'
 import { appVersion, githubUrl } from '../../../constants'
 import './AboutPage.css'
 
@@ -81,6 +83,8 @@ export function AboutPage() {
         </div>
       </article>
 
+      <ReleaseNotes />
+
       <article className="about-author">
         <div className="about-author__intro">
           <span className="eyebrow">Quem fez</span>
@@ -106,4 +110,67 @@ export function AboutPage() {
       </article>
     </section>
   )
+}
+
+/**
+ * Notas de versao navegaveis. O indice 0 e a versao publicada, entao "<" volta
+ * no tempo e ">" avanca — a lista ja vem da mais nova para a mais antiga.
+ */
+function ReleaseNotes() {
+  const [index, setIndex] = useState(0)
+  const release = releases[index]
+  const isCurrent = index === 0
+
+  return (
+    <article className="about-notes">
+      <div className="about-notes__heading">
+        <div>
+          <span className="eyebrow">Notas</span>
+          <h3>O que mudou em cada versão</h3>
+        </div>
+        <div className="round-nav about-notes__nav">
+          <button
+            type="button"
+            aria-label="Versão anterior"
+            disabled={index === releases.length - 1}
+            onClick={() => setIndex((current) => current + 1)}
+          >
+            &lt;
+          </button>
+          <h2>{release.version}</h2>
+          <button
+            type="button"
+            aria-label="Versão seguinte"
+            disabled={isCurrent}
+            onClick={() => setIndex((current) => current - 1)}
+          >
+            &gt;
+          </button>
+        </div>
+      </div>
+
+      <div className="about-notes__meta">
+        <strong>{release.title}</strong>
+        <span className="about-notes__date">{formatReleaseDate(release.date)}</span>
+        {isCurrent ? <span className="about-notes__badge">Versão atual</span> : null}
+      </div>
+
+      <ul className="about-notes__list">
+        {release.highlights.map((highlight) => (
+          <li key={highlight}>{highlight}</li>
+        ))}
+      </ul>
+    </article>
+  )
+}
+
+/** "2026-09-09" vira "9 de setembro de 2026". */
+function formatReleaseDate(date: string) {
+  const [year, month, day] = date.split('-').map(Number)
+
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(year, month - 1, day))
 }
