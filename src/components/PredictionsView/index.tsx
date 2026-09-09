@@ -697,8 +697,9 @@ function getRoundStanding(ranking: RankingEntry[], userId: string, roundId: stri
 
   const points = me.roundPoints?.[roundId] ?? 0
   const scores = ranking.map((entry) => entry.roundPoints?.[roundId] ?? 0)
-  // Empate divide a mesma colocacao: a posicao e quantos fizeram mais, +1.
-  const position = scores.filter((score) => score > points).length + 1
+  // Empate divide a mesma colocacao e a numeracao nao pula (1o, 2o, 2o, 3o):
+  // a posicao e quantas pontuacoes distintas ficaram acima, +1.
+  const position = new Set(scores.filter((score) => score > points)).size + 1
 
   return { position, total: ranking.length }
 }

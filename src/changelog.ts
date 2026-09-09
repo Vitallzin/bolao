@@ -16,6 +16,16 @@ export type Release = {
 
 export const releases: Release[] = [
   {
+    version: '1.2.1',
+    date: '2026-09-09',
+    title: 'Empate divide a colocação',
+    highlights: [
+      'Quem empata em pontos agora fica na mesma colocação, em vez de ser desempatado pelo nome.',
+      'A numeração não pula: com dois empatados em segundo, a lista segue 1º, 2º, 2º, 3º.',
+      'Vale para o ranking geral e também para a colocação da rodada mostrada na aba Palpites.',
+    ],
+  },
+  {
     version: '1.2.0',
     date: '2026-09-09',
     title: 'Palpites dos outros jogadores',

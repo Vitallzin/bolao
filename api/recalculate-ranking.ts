@@ -437,19 +437,22 @@ async function recalculateRanking() {
     })
 
   const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name)
+  const previousOrder = [...scored].sort(
+    (a, b) => b.pointsBeforeLastRound - a.pointsBeforeLastRound || byName(a, b),
+  )
+  const previousPlaces = densePlaces(previousOrder.map((entry) => entry.pointsBeforeLastRound))
   const previousPositions = new Map(
-    [...scored]
-      .sort((a, b) => b.pointsBeforeLastRound - a.pointsBeforeLastRound || byName(a, b))
-      .map((entry, index) => [entry.userId, index + 1] as const),
+    previousOrder.map((entry, index) => [entry.userId, previousPlaces[index]] as const),
   )
 
-  const entries = [...scored]
-    .sort((a, b) => b.points - a.points || byName(a, b))
+  const order = [...scored].sort((a, b) => b.points - a.points || byName(a, b))
+  const places = densePlaces(order.map((entry) => entry.points))
+  const entries = order
     .map((entry, index) => ({
       name: entry.name,
       photoURL: entry.photoURL,
       points: entry.points,
-      position: index + 1,
+      position: places[index],
       // Sem rodada pontuada ainda, nao existe "posicao anterior" para comparar.
       previousPosition: lastScoredRoundId ? previousPositions.get(entry.userId) ?? null : null,
       roundPoints: entry.roundPoints,
@@ -463,6 +466,24 @@ async function recalculateRanking() {
   })
 
   return entries
+}
+
+/**
+ * Empate divide a mesma colocacao e a numeracao nao pula: 1o, 2o, 2o, 3o.
+ * Espera a lista ja ordenada da maior pontuacao para a menor.
+ */
+function densePlaces(points: number[]) {
+  let place = 0
+  let previous: number | null = null
+
+  return points.map((value) => {
+    if (value !== previous) {
+      place += 1
+      previous = value
+    }
+
+    return place
+  })
 }
 
 function mapDocs<T>(snapshot: QuerySnapshot): T[] {
