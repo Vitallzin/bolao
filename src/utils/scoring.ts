@@ -314,6 +314,25 @@ export const competitionPredictionPoints = {
   swappedFinalist: 100,
 }
 
+/**
+ * As sete pontuacoes possiveis de um jogo na fase, da pior para a melhor:
+ * errou tudo, so o vencedor, erro de 2 gols (sem/com vencedor), erro de 1 gol
+ * (sem/com vencedor) e cravou. A tela usa a posicao aqui para colorir a etiqueta.
+ */
+export function getPredictionPointTiers(stage: string) {
+  const table = getPredictionPointTable(stage)
+
+  return [
+    0,
+    table.resultBonus,
+    table.offByTwo,
+    table.offByTwo + table.resultBonus,
+    table.offByOne,
+    table.offByOne + table.resultBonus,
+    table.exact,
+  ]
+}
+
 function getPredictionPointTable(stage: string): PointTable {
   if (stage === 'quartas') {
     return stagePointTables.quartas

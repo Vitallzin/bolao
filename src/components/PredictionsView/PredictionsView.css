@@ -2,6 +2,21 @@
   justify-self: end;
 }
 
+/* Titulo + selo do prazo. No desktop o selo daqui fica escondido (ele mora na
+   linha dos pontos); no celular e o contrario, para o prazo ficar ao lado do
+   titulo em vez de empurrar os boxes de pontos para baixo. */
+.predictions-heading__title {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.predictions-heading-pill {
+  display: none;
+  flex: 0 0 auto;
+}
+
 .predictions-step-nav h2 {
   font-size: 1.2rem;
   min-width: 180px;
@@ -30,6 +45,11 @@
   gap: 10px;
 }
 
+/* Times em cima lado a lado, placares embaixo, pontos no rodape — em qualquer
+   largura. Numa linha so, com placar real e palpite juntos, o nome do time
+   ficava cortado ate no desktop. As areas sao explicitas de proposito: deixando
+   o posicionamento automatico, o bloco de placares (que ocupa a linha inteira)
+   empurrava o time visitante para uma terceira linha. */
 .match-row {
   align-items: center;
   background: linear-gradient(180deg, rgba(7, 25, 76, 0.96), rgba(3, 15, 52, 0.96));
@@ -38,8 +58,31 @@
   box-shadow: 0 16px 44px rgba(0, 0, 0, 0.22);
   display: grid;
   gap: 10px;
-  grid-template-columns: minmax(110px, 1fr) auto minmax(110px, 1fr);
-  padding: 10px;
+  grid-template-areas:
+    'home away'
+    'scores scores'
+    'points points';
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  padding: 12px 10px;
+}
+
+.match-row > :nth-child(1) {
+  grid-area: home;
+}
+
+.match-row > :nth-child(3) {
+  grid-area: away;
+}
+
+.match-row > .match-points {
+  grid-area: points;
+}
+
+/* Linha dos times separada dos placares. */
+.match-row > .match-scores {
+  border-top: 1px solid var(--app-line);
+  grid-area: scores;
+  padding-top: 10px;
 }
 
 .match-scores {
@@ -101,15 +144,9 @@
   justify-content: center;
 }
 
-/* Rodada com resultado: todas as linhas com a mesma altura, para o Dia 1
-   e o Dia 2 ficarem alinhados lado a lado. */
-.match-days--scored .match-row {
-  align-content: center;
-  min-height: 138px;
-}
-
-/* Reserva a altura do rotulo mesmo quando ele nao aparece (caso do 'cravou'),
-   assim as caixas de placar ficam na mesma linha em todos os jogos. */
+/* Rodada com resultado: reserva a altura do rotulo mesmo quando ele nao aparece
+   (caso do 'cravou'), assim as caixas de placar ficam na mesma linha em todos os
+   jogos e o Dia 1 e o Dia 2 seguem alinhados lado a lado. */
 .match-days--scored .score-group {
   align-content: end;
   min-height: 64px;
@@ -167,7 +204,10 @@
   color: #9becff;
 }
 
-/* Pontos do jogo: verde cravou, ambar parcial, vermelho errou. */
+/* Pontos do jogo: escala de calor com um degrau por pontuacao possivel
+   (0, 15, 25, 40, 50, 65, 100): so o zero e vermelho, o resto vai do laranja ao
+   verde-claro forte do cravou. Mesmo desenho de sempre:
+   texto na cor do degrau sobre um fundo translucido da mesma cor. */
 .match-points {
   align-items: center;
   border-radius: 999px;
@@ -208,70 +248,14 @@
   text-transform: uppercase;
 }
 
-.match-points--exact {
-  background: rgba(34, 197, 94, 0.16);
-  color: #7bf1a8;
-}
+.match-points--tier-0 { background: rgba(198, 40, 40, 0.16); color: #c62828; }
+.match-points--tier-1 { background: rgba(232, 114, 46, 0.16); color: #e8722e; }
+.match-points--tier-2 { background: rgba(240, 168, 58, 0.16); color: #f0a83a; }
+.match-points--tier-3 { background: rgba(227, 198, 58, 0.16); color: #e3c63a; }
+.match-points--tier-4 { background: rgba(184, 204, 62, 0.16); color: #b8cc3e; }
+.match-points--tier-5 { background: rgba(114, 184, 74, 0.16); color: #72b84a; }
+.match-points--tier-6 { background: rgba(63, 224, 122, 0.18); color: #3fe07a; }
 
-.match-points--partial {
-  background: rgba(250, 204, 21, 0.14);
-  color: #fde047;
-}
-
-.match-points--miss {
-  background: rgba(239, 68, 68, 0.16);
-  color: #f87171;
-}
-
-/* Legenda no fim da rodada. */
-.points-legend {
-  background: linear-gradient(180deg, rgba(7, 25, 76, 0.96), rgba(3, 15, 52, 0.96));
-  border: 1px solid var(--app-border);
-  border-radius: 12px;
-  display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  padding: 16px;
-}
-
-.points-legend__item {
-  align-items: center;
-  display: flex;
-  gap: 10px;
-}
-
-.points-legend__item + .points-legend__item {
-  border-left: 1px solid var(--app-line);
-  padding-left: 16px;
-}
-
-.points-legend__item div {
-  display: grid;
-  gap: 2px;
-}
-
-.points-legend__item strong {
-  font-size: 0.82rem;
-  font-weight: 850;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.points-legend__item small {
-  color: var(--app-muted);
-  font-size: 0.76rem;
-  line-height: 1.4;
-}
-
-.points-legend__item--exact { color: #7bf1a8; }
-.points-legend__item--partial { color: #fde047; }
-.points-legend__item--miss { color: #f87171; }
-.points-legend__item--info { color: #9becff; }
-
-.points-legend__item--info .match-points__icon {
-  border-color: transparent;
-  font-size: 1rem;
-}
 
 .match-row input:disabled {
   background: rgba(148, 163, 184, 0.12);
@@ -344,72 +328,14 @@
     justify-self: stretch;
   }
 
-  .match-row {
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  }
-
   /* Fora do lado a lado, Dia 1 e Dia 2 ficam empilhados: nao ha o que alinhar,
      e a altura reservada so deixaria buracos no cartao. */
-  .match-days--scored .match-row {
-    min-height: 0;
-  }
-
   .match-days--scored .score-group {
     min-height: 0;
   }
 }
 
 @media (max-width: 620px) {
-  /* Legenda em coluna unica. */
-  .points-legend {
-    gap: 12px;
-    grid-template-columns: 1fr;
-  }
-
-  .points-legend__item + .points-legend__item {
-    border-left: 0;
-    border-top: 1px solid var(--app-line);
-    padding-left: 0;
-    padding-top: 12px;
-  }
-
-  /* Times em cima lado a lado, placares e pontos embaixo: numa linha so nao
-     cabe sem espremer tudo. As areas sao explicitas de proposito — deixando o
-     posicionamento automatico, o bloco de placares (que ocupa a linha inteira)
-     empurrava o time visitante para uma terceira linha, um em cima do outro. */
-  .match-row {
-    gap: 10px;
-    grid-template-areas:
-      'home away'
-      'scores scores'
-      'points points';
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    padding: 12px 10px;
-  }
-
-  .match-row > :nth-child(1) {
-    grid-area: home;
-  }
-
-  .match-row > .match-scores {
-    grid-area: scores;
-  }
-
-  .match-row > :nth-child(3) {
-    grid-area: away;
-  }
-
-  .match-row > .match-points {
-    grid-area: points;
-  }
-
-  /* Linha dos times separada dos placares. */
-  .match-row > .match-scores {
-    border-top: 1px solid var(--app-line);
-    justify-content: center;
-    padding-top: 10px;
-  }
-
   .match-scores {
     gap: 10px;
   }
@@ -469,10 +395,6 @@
   white-space: nowrap;
 }
 
-.round-score-summary__filled strong {
-  color: #9becff;
-}
-
 .others-empty-note {
   text-align: center;
 }
@@ -488,5 +410,20 @@
     justify-content: center;
     margin-left: 0;
     width: 100%;
+  }
+
+  .predictions-heading__title {
+    width: 100%;
+  }
+
+  .predictions-heading-pill {
+    display: inline-block;
+    font-size: 0.78rem;
+    padding: 6px 10px;
+    white-space: nowrap;
+  }
+
+  .predictions-row-pill {
+    display: none;
   }
 }

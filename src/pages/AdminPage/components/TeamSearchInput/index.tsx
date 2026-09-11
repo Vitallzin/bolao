@@ -4,6 +4,8 @@ import type { Team } from '../../../../types'
 
 type TeamSearchInputProps = {
   align?: 'left' | 'right'
+  /** Times que nao podem ser escolhidos aqui (ex.: ja estao em outro jogo da rodada). */
+  excludedTeamIds?: Set<string>
   name: string
   onChange: (value: string) => void
   placeholder: string
@@ -14,6 +16,7 @@ type TeamSearchInputProps = {
 
 export function TeamSearchInput({
   align = 'left',
+  excludedTeamIds,
   name,
   onChange,
   placeholder,
@@ -22,15 +25,26 @@ export function TeamSearchInput({
   value,
 }: TeamSearchInputProps) {
   const selectedTeam = teams.find((team) => team.id === value)
+  // O time ja escolhido neste campo continua disponivel; os excluidos somem da busca.
+  const availableTeams = excludedTeamIds
+    ? teams.filter((team) => team.id === value || !excludedTeamIds.has(team.id))
+    : teams
   const [query, setQuery] = useState(selectedTeam?.name ?? '')
   const [isEditingBadge, setIsEditingBadge] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
   const normalizedQuery = normalizeTeamName(query)
-  const exactTeam = teams.find((team) => normalizeTeamName(team.name) === normalizedQuery)
+  const exactTeam = availableTeams.find((team) => normalizeTeamName(team.name) === normalizedQuery)
   const matchingTeams = normalizedQuery
-    ? teams.filter((team) => normalizeTeamName(team.name).includes(normalizedQuery)).slice(0, 6)
+    ? availableTeams.filter((team) => normalizeTeamName(team.name).includes(normalizedQuery)).slice(0, 6)
     : []
   const hasInvalidTeam = Boolean(query.trim()) && !value && !exactTeam
+  // Digitou o nome exato de um time que ja esta em outro jogo: avisa em vez de so ficar vermelho.
+  const excludedExactTeam =
+    !exactTeam && excludedTeamIds
+      ? teams.find(
+        (team) => excludedTeamIds.has(team.id) && normalizeTeamName(team.name) === normalizedQuery,
+      )
+      : undefined
 
   useEffect(() => {
     if (selectedTeam) {
@@ -40,7 +54,9 @@ export function TeamSearchInput({
   }, [selectedTeam])
 
   function handleQueryChange(nextQuery: string) {
-    const nextExactTeam = teams.find((team) => normalizeTeamName(team.name) === normalizeTeamName(nextQuery))
+    const nextExactTeam = availableTeams.find(
+      (team) => normalizeTeamName(team.name) === normalizeTeamName(nextQuery),
+    )
 
     setQuery(nextQuery)
     setIsOpen(true)
@@ -95,6 +111,12 @@ export function TeamSearchInput({
               <TeamBadge team={team} />
             </button>
           ))}
+        </div>
+      ) : isOpen && excludedExactTeam ? (
+        <div className="team-search__options">
+          <span className="team-search__note">
+            {excludedExactTeam.name} já está em outro jogo desta rodada.
+          </span>
         </div>
       ) : null}
     </div>

@@ -521,6 +521,7 @@ export function useCompetitionActions({
     const roundId = `round-${roundNumber}`
     const data = new FormData(event.currentTarget)
     const batch = writeBatch(db)
+    const usedTeamIds = new Set<string>()
     let savedMatches = 0
 
     batch.set(
@@ -547,6 +548,15 @@ export function useCompetitionActions({
           setMessage(`Confira o jogo ${slot} do Dia ${day}.`)
           return
         }
+
+        // Um time joga uma vez so por rodada.
+        if (usedTeamIds.has(homeTeamId) || usedTeamIds.has(awayTeamId)) {
+          setMessage(`Um time do jogo ${slot} do Dia ${day} já está em outro jogo desta rodada.`)
+          return
+        }
+
+        usedTeamIds.add(homeTeamId)
+        usedTeamIds.add(awayTeamId)
 
         const matchId = `round-${roundNumber}-day-${day}-slot-${slot}`
         const existingMatch = matches.find((match) => match.id === matchId)

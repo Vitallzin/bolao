@@ -18,3 +18,13 @@ export function formatDateTime(value: Date) {
     timeStyle: 'short',
   }).format(value)
 }
+
+/** Dia/mes e hora, sem ano: "13/10, 13:45". Para onde a data completa nao cabe. */
+export function formatShortDateTime(value: Date) {
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(value)
+}

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { EmptyState } from '../EmptyState'
 import { TeamBadge } from '../TeamBadge'
 import { KnockoutPredictionCard } from '../../pages/DashboardPage/KnockoutPage/components/KnockoutPredictionCard'
@@ -12,8 +12,8 @@ import type {
   Round,
   Team,
 } from '../../types'
-import { formatDateTime } from '../../utils/date'
-import { calculatePredictionPoints, stagePointTables } from '../../utils/scoring'
+import { formatDateTime, formatShortDateTime } from '../../utils/date'
+import { calculatePredictionPoints, getPredictionPointTiers, stagePointTables } from '../../utils/scoring'
 import './PredictionsView.css'
 
 type PredictionsViewProps = {
@@ -53,11 +53,24 @@ export function PredictionsView({
   // Fica aqui em cima para o jogador escolhido nao se perder ao alternar de volta
   // para os proprios palpites, nem ao trocar de rodada.
   const [othersUserId, setOthersUserId] = useState('')
+  const initialStepChosen = useRef(false)
   const activeStep = steps[activeStepIndex]
 
   useEffect(() => {
     setActiveStepIndex((current) => Math.min(current, Math.max(0, steps.length - 1)))
   }, [steps.length])
+
+  // Ao abrir a aba, pula direto para a rodada do momento. So uma vez: as rodadas
+  // chegam do Firestore depois do primeiro render, e a escolha do jogador depois
+  // disso e dele.
+  useEffect(() => {
+    if (initialStepChosen.current || rounds.length === 0) {
+      return
+    }
+
+    initialStepChosen.current = true
+    setActiveStepIndex(getInitialStepIndex(steps))
+  }, [rounds.length, steps])
 
   if (steps.length === 0) {
     return (
@@ -68,12 +81,22 @@ export function PredictionsView({
     )
   }
 
+  // No celular o cabecalho vira coluna e o selo do prazo sobe para o lado do
+  // titulo; no desktop ele fica na linha dos pontos (o CSS esconde um ou outro).
+  const headingPill =
+    activeStep.kind === 'round' ? (
+      <RoundStatusPill className="predictions-heading-pill" compact round={activeStep.round} />
+    ) : null
+
   return (
     <section className="content-grid">
       <div className="section-heading">
-        <div>
-          <span className="eyebrow">Palpites</span>
-          <h2>Seus palpites</h2>
+        <div className="predictions-heading__title">
+          <div>
+            <span className="eyebrow">Palpites</span>
+            <h2>Seus palpites</h2>
+          </div>
+          {headingPill}
         </div>
         <div className="round-nav predictions-step-nav">
           <button type="button" onClick={() => setActiveStepIndex((current) => Math.max(0, current - 1))} disabled={activeStepIndex === 0}>
@@ -214,6 +237,8 @@ function RoundPredictions({
           matches={matches}
           players={players}
           predictions={predictions}
+          ranking={ranking}
+          round={round}
           selectedUserId={othersUserId}
           teamMap={teamMap}
           onSelectedUserChange={onOthersUserChange}
@@ -221,9 +246,7 @@ function RoundPredictions({
       ) : (
         <>
           <div className="round-status-line predictions-status-line">
-            <span className={locked ? 'status-pill status-pill--locked' : 'status-pill'}>
-              {locked ? 'Fechada' : `Aberta até ${formatDateTime(round.deadline)}`}
-            </span>
+            <RoundStatusPill className="predictions-row-pill" round={round} />
 
             <div className="round-status-line__right">
               {hasResults ? (
@@ -318,11 +341,37 @@ function RoundPredictions({
             ))}
           </div>
 
-          {hasResults ? <PointsLegend /> : null}
         </>
       )}
     </>
   )
+}
+
+/**
+ * "Fechada" ou "Aberta ate <prazo>", conforme o prazo da rodada. A versao
+ * compacta ("Ate 13/10, 13:45") e para o cabecalho do celular, onde a data
+ * completa nao cabe ao lado do titulo.
+ */
+function RoundStatusPill({
+  className,
+  compact = false,
+  round,
+}: {
+  className?: string
+  compact?: boolean
+  round: Round
+}) {
+  const locked = new Date() >= round.deadline
+  const classes = ['status-pill', locked ? 'status-pill--locked' : '', className ?? '']
+    .filter(Boolean)
+    .join(' ')
+  const label = locked
+    ? 'Fechada'
+    : compact
+      ? `Até ${formatShortDateTime(round.deadline)}`
+      : `Aberta até ${formatDateTime(round.deadline)}`
+
+  return <span className={classes}>{label}</span>
 }
 
 /**
@@ -337,6 +386,8 @@ function OtherPlayersPredictions({
   onSelectedUserChange,
   players,
   predictions,
+  ranking,
+  round,
   selectedUserId,
   teamMap,
 }: {
@@ -347,6 +398,8 @@ function OtherPlayersPredictions({
   onSelectedUserChange: (userId: string) => void
   players: Player[]
   predictions: Prediction[]
+  ranking: RankingEntry[]
+  round: Round
   selectedUserId: string
   teamMap: Map<string, Team>
 }) {
@@ -375,6 +428,7 @@ function OtherPlayersPredictions({
   const filledCount = matches.filter((match) =>
     selectedPredictions.some((item) => item.matchId === match.id),
   ).length
+  const roundStanding = selected ? getRoundStanding(ranking, selected.id, round.id) : null
 
   if (others.length === 0) {
     return (
@@ -407,20 +461,20 @@ function OtherPlayersPredictions({
         </div>
 
         <div className="round-status-line__right">
-          <div className="round-score-summary">
-            <div className="round-score-summary__filled">
-              <strong>
-                {filledCount}/{matches.length}
-              </strong>
-              <span>jogos palpitados</span>
-            </div>
-            {hasResults ? (
+          {hasResults ? (
+            <div className="round-score-summary">
               <div className="round-score-summary__points">
                 <strong>{roundPoints}</strong>
                 <span>pts nessa rodada</span>
               </div>
-            ) : null}
-          </div>
+              {roundStanding ? (
+                <div className="round-score-summary__position">
+                  <strong>{roundStanding.position}º</strong>
+                  <span>de {roundStanding.total} na rodada</span>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
           {audienceToggle}
         </div>
       </div>
@@ -486,7 +540,6 @@ function OtherPlayersPredictions({
         </p>
       ) : null}
 
-      {hasResults ? <PointsLegend /> : null}
     </>
   )
 }
@@ -500,13 +553,28 @@ function getMatchOutcome(points: number) {
   return points > 0 ? ('partial' as const) : ('miss' as const)
 }
 
+/**
+ * Degrau da pontuacao na escala de cores (0 = vermelho ... 6 = verde). Um valor
+ * fora da tabela cai no degrau imediatamente abaixo, para nunca ficar sem cor.
+ */
+function getPointTier(points: number, stage = 'early') {
+  const tiers = getPredictionPointTiers(stage)
+  const exact = tiers.indexOf(points)
+
+  if (exact >= 0) {
+    return exact
+  }
+
+  return Math.max(0, tiers.filter((tier) => tier < points).length - 1)
+}
+
 function MatchPoints({ points }: { points: number }) {
   const outcome = getMatchOutcome(points)
   const labels = { exact: 'Cravou!', miss: 'Errou', partial: 'Parcial' }
   const icons = { exact: '✓', miss: '✕', partial: '★' }
 
   return (
-    <div className={`match-points match-points--${outcome}`}>
+    <div className={`match-points match-points--tier-${getPointTier(points)}`}>
       <span className="match-points__icon" aria-hidden="true">
         {icons[outcome]}
       </span>
@@ -514,46 +582,6 @@ function MatchPoints({ points }: { points: number }) {
         <strong>{points > 0 ? `+${points}` : '0'} pts</strong>
         <small>{labels[outcome]}</small>
       </span>
-    </div>
-  )
-}
-
-function PointsLegend() {
-  const { exact, offByTwo, offByOne, resultBonus } = stagePointTables.early
-
-  return (
-    <div className="points-legend">
-      <div className="points-legend__item points-legend__item--exact">
-        <span className="match-points__icon" aria-hidden="true">✓</span>
-        <div>
-          <strong>Cravou!</strong>
-          <small>Placar exato. {exact} pontos.</small>
-        </div>
-      </div>
-      <div className="points-legend__item points-legend__item--partial">
-        <span className="match-points__icon" aria-hidden="true">★</span>
-        <div>
-          <strong>Parcial</strong>
-          <small>
-            Acertou o vencedor ou chegou perto do placar. De {resultBonus} a {offByOne + resultBonus}{' '}
-            pontos.
-          </small>
-        </div>
-      </div>
-      <div className="points-legend__item points-legend__item--miss">
-        <span className="match-points__icon" aria-hidden="true">✕</span>
-        <div>
-          <strong>Errou</strong>
-          <small>Não acertou nada do palpite. 0 pontos.</small>
-        </div>
-      </div>
-      <div className="points-legend__item points-legend__item--info">
-        <span className="match-points__icon" aria-hidden="true">🏆</span>
-        <div>
-          <strong>Pontuação</strong>
-          <small>Erro de 2 gols ainda vale {offByTwo}. Quanto mais avancada a fase, mais pontos.</small>
-        </div>
-      </div>
     </div>
   )
 }
@@ -644,6 +672,51 @@ function KnockoutPredictions({
       </div>
     </>
   )
+}
+
+type PredictionStep = ReturnType<typeof buildPredictionSteps>[number]
+
+/** Quanto tempo uma rodada fechada ainda e a tela inicial, para todo mundo conferir o resultado. */
+const closedStepGraceMs = 7 * 24 * 60 * 60 * 1000
+
+/**
+ * Passo que abre por padrao: o primeiro cujo prazo ainda nao venceu ha mais de
+ * uma semana. Assim uma rodada recem-fechada continua em foco por sete dias e
+ * depois a tela passa sozinha para a seguinte. Tudo vencido, fica na ultima.
+ */
+function getInitialStepIndex(steps: PredictionStep[], now = new Date()) {
+  const candidates = steps
+    .map((step, index) => ({ deadline: getStepDeadline(step), index }))
+    .filter((candidate): candidate is { deadline: Date; index: number } => candidate.deadline !== null)
+
+  if (candidates.length === 0) {
+    return 0
+  }
+
+  const current = candidates.find(
+    (candidate) => candidate.deadline.getTime() + closedStepGraceMs > now.getTime(),
+  )
+
+  return (current ?? candidates[candidates.length - 1]).index
+}
+
+/** Prazo que define "quando" o passo acontece; no mata-mata, o do ultimo jogo cadastrado. */
+function getStepDeadline(step: PredictionStep): Date | null {
+  if (step.kind === 'round') {
+    return step.round.deadline
+  }
+
+  if (step.kind !== 'knockout') {
+    return null
+  }
+
+  const deadlines = step.ties
+    .map((tie) => tie.awayLegDeadline ?? tie.homeLegDeadline)
+    .filter((deadline): deadline is Date => Boolean(deadline))
+
+  return deadlines.length > 0
+    ? new Date(Math.max(...deadlines.map((deadline) => deadline.getTime())))
+    : null
 }
 
 function buildPredictionSteps(rounds: Round[], knockout: KnockoutTie[]) {

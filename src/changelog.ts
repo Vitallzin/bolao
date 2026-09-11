@@ -16,6 +16,19 @@ export type Release = {
 
 export const releases: Release[] = [
   {
+    version: '1.2.2',
+    date: '2026-09-10',
+    title: 'Ajustes de leitura e do celular',
+    highlights: [
+      'A aba Palpites abre direto na rodada do momento: uma rodada fechada segue em foco por uma semana e depois a tela passa para a seguinte.',
+      'Os pontos de cada jogo ganharam uma escala de cores, do vermelho (errou) ao verde (cravou).',
+      'Cada jogo mostra os times em cima e os placares embaixo em qualquer tela — os nomes não ficam mais cortados no computador.',
+      'Nos palpites dos outros jogadores aparecem os pontos e a colocação da pessoa na rodada.',
+      'No celular, o prazo da rodada fica ao lado do título, e as posições da tabela abaixo do 24º ficaram alinhadas.',
+      'Admin: um time não pode mais ser escalado em dois jogos da mesma rodada.',
+    ],
+  },
+  {
     version: '1.2.1',
     date: '2026-09-09',
     title: 'Empate divide a colocação',

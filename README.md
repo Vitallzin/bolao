@@ -5,7 +5,7 @@
 **Aplicação web para acompanhar a Champions League com os amigos** — palpites, ranking ao vivo e
 classificação com o critério de desempate oficial da UEFA.
 
-[![Versao](https://img.shields.io/badge/vers%C3%A3o-1.2.1-38E1FF)](https://github.com/Vitallzin/bolao/releases)
+[![Versao](https://img.shields.io/badge/vers%C3%A3o-1.2.2-38E1FF)](https://github.com/Vitallzin/bolao/releases)
 [![React](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)](https://vitejs.dev)

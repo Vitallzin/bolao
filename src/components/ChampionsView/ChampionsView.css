@@ -84,6 +84,14 @@ tbody tr:last-child td {
     padding: 0 4px;
   }
 
+  /* Do 25o em diante a posicao vem sem quadrado; precisa ocupar a mesma largura
+     do quadrado, senao os numeros ficam deslocados em relacao aos de cima. */
+  .table-wrap .team-badge__rank {
+    font-size: 0.72rem;
+    height: 24px;
+    min-width: 30px;
+  }
+
   .table-wrap .team-badge > span:last-child {
     overflow: hidden;
     text-overflow: ellipsis;

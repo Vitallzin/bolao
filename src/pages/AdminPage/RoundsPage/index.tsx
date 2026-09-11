@@ -119,6 +119,22 @@ export function RoundsPage({
   }
 
   const roundExists = Boolean(round) || roundMatches.length > 0
+  // Cada time entra uma vez so por rodada: o que ja esta num jogo some da busca dos outros.
+  const usedTeamIds = new Set<string>()
+
+  for (const day of [1, 2]) {
+    for (const slot of matchSlots) {
+      const slotDraft = getSlotDraft(day, slot)
+
+      if (slotDraft.homeTeamId) {
+        usedTeamIds.add(slotDraft.homeTeamId)
+      }
+
+      if (slotDraft.awayTeamId) {
+        usedTeamIds.add(slotDraft.awayTeamId)
+      }
+    }
+  }
 
   return (
     <>
@@ -173,6 +189,7 @@ export function RoundsPage({
                       slot={slot}
                       teamMap={teamMap}
                       teams={teams}
+                      usedTeamIds={usedTeamIds}
                       onPublishScore={onPublishScore}
                       onRealScoreChange={onRealScoreChange}
                       onTeamChange={(field, value) => updateSlotDraft(day, slot, field, value)}
@@ -257,6 +274,7 @@ function RoundSlot({
   slot,
   teamMap,
   teams,
+  usedTeamIds,
 }: {
   awayTeamId: string
   day: 1 | 2
@@ -269,12 +287,14 @@ function RoundSlot({
   slot: number
   teamMap: Map<string, Team>
   teams: Team[]
+  usedTeamIds: Set<string>
 }) {
   return (
     <article className="round-slot">
       <div className="round-slot-fields">
         <strong>Jogo {slot}</strong>
         <TeamSearchInput
+          excludedTeamIds={usedTeamIds}
           name={`day-${day}-slot-${slot}-homeTeamId`}
           placeholder="Mandante"
           teams={teams}
@@ -282,6 +302,7 @@ function RoundSlot({
           onChange={(value) => onTeamChange('homeTeamId', value)}
         />
         <TeamSearchInput
+          excludedTeamIds={usedTeamIds}
           name={`day-${day}-slot-${slot}-awayTeamId`}
           placeholder="Visitante"
           teams={teams}
