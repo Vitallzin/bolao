@@ -34,6 +34,19 @@ service cloud.firestore {
         && request.time < roundData.data.deadline;
     }
 
+    // O roundId gravado no palpite tem que ser o da partida: e por ele que a
+    // leitura libera os palpites de uma rodada fechada.
+    function roundIdMatchesMatch(competitionId, matchId, roundId) {
+      return roundId == get(/databases/$(database)/documents/competitions/$(competitionId)/matches/$(matchId)).data.roundId;
+    }
+
+    // Prazo da rodada vencido: dai em diante os palpites dela podem ser vistos
+    // por todos (aba "Palpites dos jogadores"). Antes disso, ninguem ve o dos outros.
+    function roundClosed(competitionId, roundId) {
+      return roundId is string
+        && request.time >= get(/databases/$(database)/documents/competitions/$(competitionId)/rounds/$(roundId)).data.deadline;
+    }
+
     function beforeKnockoutPredictionDeadline(competitionId, tieId, leg) {
       let tieData = get(/databases/$(database)/documents/competitions/$(competitionId)/knockout/$(tieId));
       return leg == "home"
@@ -50,8 +63,17 @@ service cloud.firestore {
         && request.time < get(settings).data.deadline;
     }
 
+    // Liberacao real de quem esta logado (admin conta como liberado). Usado para
+    // o perfil publico nao poder dizer algo diferente do perfil privado.
+    function ownApproval() {
+      let data = userProfile().data;
+      return data.approved == true || data.role == "admin";
+    }
+
+    // Perfil completo: tem e-mail, papel e preferencias de notificacao. So o
+    // dono e o admin leem; os outros jogadores usam profiles/{uid}.
     match /users/{userId} {
-      allow read: if signedIn();
+      allow read: if isOwner(userId) || isAdmin();
 
       allow create: if isOwner(userId)
         && request.resource.data.role == "user"
@@ -62,6 +84,24 @@ service cloud.firestore {
           isOwner(userId)
           && request.resource.data.role == resource.data.role
           && request.resource.data.approved == resource.data.approved
+        );
+
+      allow delete: if isAdmin() || isOwner(userId);
+    }
+
+    // Perfil publico: so nome, foto e se e jogador liberado — o que o ranking e
+    // a aba "Palpites dos jogadores" precisam. Qualquer logado le.
+    match /profiles/{userId} {
+      allow read: if signedIn();
+
+      // O dono escreve o proprio, mas so esses tres campos, e "liberado" tem que
+      // bater com o users/{uid} dele: ninguem se libera pelo perfil publico.
+      allow create, update: if isAdmin()
+        || (
+          isOwner(userId)
+          && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          && request.resource.data.keys().hasOnly(['approved', 'name', 'photoURL'])
+          && request.resource.data.approved == ownApproval()
         );
 
       allow delete: if isAdmin() || isOwner(userId);
@@ -98,23 +138,33 @@ service cloud.firestore {
       }
 
       match /predictions/{predictionId} {
-        allow read: if signedIn();
+        // Os proprios sempre; os dos outros so com a rodada fechada; o admin tudo.
+        // Consultas precisam filtrar por userId (os meus) ou roundId (rodada
+        // fechada) para o servidor conseguir provar a regra.
+        allow read: if signedIn() && (
+          isAdmin()
+          || resource.data.userId == request.auth.uid
+          || roundClosed(competitionId, resource.data.roundId)
+        );
 
         allow create: if isApprovedPlayer()
           && request.resource.data.userId == request.auth.uid
+          && roundIdMatchesMatch(competitionId, request.resource.data.matchId, request.resource.data.roundId)
           && beforePredictionDeadline(competitionId, request.resource.data.matchId);
 
         allow update: if isApprovedPlayer()
           && resource.data.userId == request.auth.uid
           && request.resource.data.userId == resource.data.userId
           && request.resource.data.matchId == resource.data.matchId
+          && roundIdMatchesMatch(competitionId, resource.data.matchId, request.resource.data.roundId)
           && beforePredictionDeadline(competitionId, resource.data.matchId);
 
         allow delete: if isAdmin() || resource.data.userId == request.auth.uid;
       }
 
       match /knockoutPredictions/{predictionId} {
-        allow read: if signedIn();
+        // Ninguem ve o palpite do mata-mata dos outros pelo app; so o dono e o admin.
+        allow read: if signedIn() && (isAdmin() || resource.data.userId == request.auth.uid);
 
         allow create: if isApprovedPlayer()
           && request.resource.data.userId == request.auth.uid
@@ -139,7 +189,8 @@ service cloud.firestore {
       }
 
       match /competitionPredictions/{predictionId} {
-        allow read: if signedIn();
+        // Previsoes da competicao: so o dono e o admin.
+        allow read: if signedIn() && (isAdmin() || resource.data.userId == request.auth.uid);
 
         allow create: if isApprovedPlayer()
           && predictionId == request.auth.uid

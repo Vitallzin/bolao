@@ -55,12 +55,13 @@ export function useCompetitionActions({
   rounds,
   setMessage,
 }: UseCompetitionActionsProps) {
-  async function handlePrediction(matchId: string, side: 'homeScore' | 'awayScore', value: string) {
+  /** Devolve true quando o palpite foi gravado (e confirmado), false quando o prazo ou a sessão impediram. */
+  async function handlePrediction(matchId: string, side: 'homeScore' | 'awayScore', value: string): Promise<boolean> {
     const match = matches.find((item) => item.id === matchId)
     const round = match ? rounds.find((item) => item.id === match.roundId) : undefined
 
     if (!currentUser || !round || new Date() >= round.deadline) {
-      return
+      return false
     }
 
     const existing = predictions.find(
@@ -82,12 +83,17 @@ export function useCompetitionActions({
       {
         userId: currentUser.id,
         matchId,
+        // A regra de leitura libera os palpites de uma rodada para todos so depois
+        // do prazo, consultando por roundId — por isso ele vai em cada palpite.
+        roundId: round.id,
         homeScore,
         awayScore,
         updatedAt: serverTimestamp(),
       },
       { merge: true },
     )
+
+    return true
   }
 
   async function handleKnockoutPrediction(
@@ -95,16 +101,16 @@ export function useCompetitionActions({
     leg: KnockoutLeg,
     side: 'homeScore' | 'awayScore',
     value: string,
-  ) {
+  ): Promise<boolean> {
     const tie = knockout.find((item) => item.id === tieId)
     const deadline = leg === 'home' ? tie?.homeLegDeadline : tie?.awayLegDeadline
 
     if (!currentUser || !tie || !deadline || new Date() >= deadline) {
-      return
+      return false
     }
 
     if (tie.stage === 'final' && leg === 'away') {
-      return
+      return false
     }
 
     const existing = knockoutPredictions.find(
@@ -126,6 +132,8 @@ export function useCompetitionActions({
       },
       { merge: true },
     )
+
+    return true
   }
 
   async function submitCompetitionPrediction(event: FormEvent<HTMLFormElement>) {
@@ -416,6 +424,8 @@ export function useCompetitionActions({
 
   async function approveUser(userId: string, approved: boolean) {
     await updateDoc(doc(db, 'users', userId), { approved })
+    // O perfil publico tambem: e por ele que os outros veem quem e jogador.
+    await setDoc(doc(db, 'profiles', userId), { approved }, { merge: true })
     setMessage(approved ? 'Agora é jogador.' : 'Agora é visitante.')
     await recalculateRankingAfterPublish()
   }

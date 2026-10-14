@@ -78,9 +78,10 @@
 
 .about-card__icon {
   align-items: center;
-  background: rgba(226, 242, 255, 0.07);
-  border: 1px solid var(--app-line, var(--border));
+  background: rgba(56, 225, 255, 0.1);
+  border: 1px solid rgba(56, 225, 255, 0.32);
   border-radius: 10px;
+  color: #7fe9ff;
   display: inline-flex;
   flex: 0 0 auto;
   font-size: 1.1rem;

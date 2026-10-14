@@ -1,0 +1,119 @@
+/* Mesma linguagem do .match-points: pilula translucida na cor do estado, com um
+   circulo de borda cheia a esquerda. Ciano para "salvo", para nao se confundir
+   com a escala de pontos (vermelho -> verde). */
+.save-status {
+  align-items: center;
+  background: rgba(226, 242, 255, 0.05);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: var(--app-muted);
+  display: inline-flex;
+  gap: 7px;
+  grid-column: 1 / -1;
+  justify-self: center;
+  min-height: 28px;
+  padding: 3px 12px 3px 4px;
+  transition:
+    background 0.25s ease,
+    border-color 0.25s ease,
+    color 0.25s ease;
+}
+
+.save-status__icon {
+  align-items: center;
+  border: 1.5px solid currentColor;
+  border-radius: 999px;
+  box-sizing: border-box;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 0.68rem;
+  font-weight: 900;
+  height: 20px;
+  justify-content: center;
+  opacity: 0.55;
+  width: 20px;
+}
+
+.save-status__label {
+  font-size: 0.7rem;
+  font-weight: 850;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Sem palpite ainda: so um lembrete discreto de que nao precisa de botao. */
+.save-status--idle .save-status__label {
+  opacity: 0.75;
+}
+
+.save-status--saving {
+  background: rgba(226, 242, 255, 0.08);
+  color: #bfe6ff;
+}
+
+.save-status--saving .save-status__icon {
+  opacity: 1;
+}
+
+.save-status__spinner {
+  animation: save-status-spin 0.8s linear infinite;
+  border: 2px solid rgba(186, 230, 253, 0.28);
+  border-radius: 999px;
+  border-top-color: #9becff;
+  box-sizing: border-box;
+  height: 10px;
+  width: 10px;
+}
+
+.save-status--saved {
+  animation: save-status-pop 0.45s ease-out;
+  background: rgba(56, 225, 255, 0.14);
+  border-color: rgba(56, 225, 255, 0.4);
+  color: #7fe9ff;
+}
+
+.save-status--saved .save-status__icon {
+  background: rgba(56, 225, 255, 0.2);
+  opacity: 1;
+}
+
+.save-status--error {
+  background: rgba(198, 40, 40, 0.16);
+  border-color: rgba(255, 107, 107, 0.4);
+  color: #ff7b7b;
+}
+
+.save-status--error .save-status__icon {
+  opacity: 1;
+}
+
+@keyframes save-status-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes save-status-pop {
+  0% {
+    transform: scale(0.88);
+  }
+
+  60% {
+    transform: scale(1.06);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .save-status--saved {
+    animation: none;
+  }
+
+  .save-status__spinner {
+    animation-duration: 1.6s;
+  }
+}

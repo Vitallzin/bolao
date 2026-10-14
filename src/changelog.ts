@@ -16,6 +16,20 @@ export type Release = {
 
 export const releases: Release[] = [
   {
+    version: '1.3.0',
+    date: '2026-10-14',
+    title: 'Cara de Champions, mais rápido e mais seguro',
+    highlights: [
+      'Cada jogo mostra quando o palpite foi salvo — continua salvando sozinho, sem botão.',
+      'Tabela com as zonas da fase de liga (oitavas, playoffs, eliminado) e legenda, como na tabela oficial.',
+      'Placares e pontos na fonte da transmissão, starball no cabeçalho, chaveamento escuro e inteiro na tela do computador.',
+      'No ranking, a sua linha aparece em destaque.',
+      'Celular: cabeçalho compacto, abas que acompanham a aba aberta e seletores centralizados.',
+      'O site abre bem mais rápido ao recarregar.',
+      'Segurança: ninguém vê o palpite dos outros antes do prazo, nem o e-mail dos outros jogadores.',
+    ],
+  },
+  {
     version: '1.2.2',
     date: '2026-09-10',
     title: 'Ajustes de leitura e do celular',

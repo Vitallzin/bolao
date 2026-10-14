@@ -121,3 +121,40 @@
   line-height: 1.5;
   padding: 10px 12px;
 }
+
+/* Pontos na fonte dos titulos, como placar de transmissao. */
+.ranking-row__points,
+.position {
+  font-family: var(--display);
+  font-variant-numeric: tabular-nums;
+}
+
+.ranking-row__points {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+/* A linha de quem esta vendo: borda e brilho ciano, mais o selo "Voce". */
+.ranking-row--me {
+  background:
+    linear-gradient(90deg, rgba(56, 225, 255, 0.14), transparent 55%),
+    linear-gradient(180deg, rgba(7, 25, 76, 0.96), rgba(3, 15, 52, 0.96));
+  border-color: rgba(56, 225, 255, 0.55);
+  box-shadow:
+    0 16px 44px rgba(0, 0, 0, 0.22),
+    0 0 22px rgba(56, 225, 255, 0.16);
+}
+
+.ranking-row__me {
+  background: rgba(56, 225, 255, 0.16);
+  border: 1px solid rgba(56, 225, 255, 0.5);
+  border-radius: 999px;
+  color: #9becff;
+  font-size: 0.64rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  margin-left: 8px;
+  padding: 2px 8px;
+  text-transform: uppercase;
+  vertical-align: 2px;
+}

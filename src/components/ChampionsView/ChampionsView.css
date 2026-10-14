@@ -31,6 +31,93 @@ tbody tr:last-child td {
   border-bottom: 0;
 }
 
+/* Zonas da fase de liga como na tabela oficial: uma faixa na borda esquerda da
+   linha (ciano = oitavas, azul = playoffs, nada = eliminado) e a legenda embaixo. */
+/* Faixa num pseudo-elemento: box-shadow inset em celula com border-collapse
+   pinta um risco a mais embaixo da celula no Chrome. */
+.standings-row td:first-child {
+  position: relative;
+}
+
+.standings-row td:first-child::before {
+  background: var(--zone-color, transparent);
+  bottom: 0;
+  content: '';
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 3px;
+}
+
+.standings-row--direct {
+  --zone-color: #38e1ff;
+}
+
+.standings-row--playoff {
+  --zone-color: #2f6bff;
+}
+
+/* Linha de corte entre uma zona e a outra, mais marcada que a divisoria comum. */
+.standings-row--direct + .standings-row--playoff td,
+.standings-row--playoff + .standings-row--out td {
+  border-top: 1px solid rgba(186, 230, 253, 0.32);
+}
+
+.standings-row--out td {
+  color: var(--app-muted);
+}
+
+/* Pontos fecham a linha, em destaque, como na tabela da UEFA. */
+th.col-points {
+  color: var(--app-title);
+}
+
+td.col-points {
+  color: var(--app-title);
+  font-family: var(--display);
+  font-size: 1.1rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.standings-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  list-style: none;
+  margin: -6px 0 0;
+  padding: 0 4px;
+}
+
+.standings-legend__item {
+  align-items: center;
+  color: var(--app-muted);
+  display: inline-flex;
+  font-size: 0.8rem;
+  font-weight: 700;
+  gap: 8px;
+}
+
+.standings-legend__item::before {
+  background: var(--zone-color);
+  border-radius: 2px;
+  content: '';
+  height: 14px;
+  width: 4px;
+}
+
+.standings-legend__item--direct {
+  --zone-color: #38e1ff;
+}
+
+.standings-legend__item--playoff {
+  --zone-color: #2f6bff;
+}
+
+.standings-legend__item--out {
+  --zone-color: rgba(186, 230, 253, 0.25);
+}
+
 @media (max-width: 620px) {
   .table-wrap {
     overflow-x: hidden;

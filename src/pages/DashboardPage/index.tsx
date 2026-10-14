@@ -1,8 +1,10 @@
-import { useEffect, useState, type FormEvent, type FormEventHandler } from 'react'
+import { lazy, Suspense, useEffect, useState, type FormEvent, type FormEventHandler } from 'react'
 import { AppHeader } from '../../components/AppHeader'
 import { EmptyState } from '../../components/EmptyState'
 import { NavigationTabs } from '../../components/NavigationTabs'
-import { AdminPage } from '../AdminPage'
+// O CSS do admin fica no carregamento principal: varias classes dele
+// (round-nav, round-status-line, muted-text...) sao usadas nas telas de jogador.
+import '../AdminPage/AdminPage.css'
 import { AboutPage } from './AboutPage'
 import { ChampionsPage } from './ChampionsPage'
 import { CompetitionPredictionsPage } from './CompetitionPredictionsPage'
@@ -28,6 +30,11 @@ import type {
 } from '../../types'
 import { buildStandings } from '../../utils/scoring'
 import './DashboardPage.css'
+
+
+// O painel admin so e usado pelo admin: fica num arquivo separado e so baixa
+// quando ele entra no Modo admin, em vez de pesar na abertura para todo mundo.
+const AdminPage = lazy(() => import('../AdminPage').then((module) => ({ default: module.AdminPage })))
 
 type DashboardPageProps = {
   activeView: View
@@ -63,11 +70,11 @@ type DashboardPageProps = {
     leg: 'home' | 'away',
     side: 'homeScore' | 'awayScore',
     value: string,
-  ) => void
+  ) => Promise<boolean>
   onLogout: () => void
   onNotificationPreferencesUpdate: (preferences: NotificationPreferences) => Promise<void>
   onProfileNameUpdate: (name: string) => Promise<void>
-  onPredictionChange: (matchId: string, side: 'homeScore' | 'awayScore', value: string) => void
+  onPredictionChange: (matchId: string, side: 'homeScore' | 'awayScore', value: string) => Promise<boolean>
   onPublishCompetitionPredictionResult: () => void
   onSaveCompetitionPredictionDeadline: (value: string) => void
   onSaveCompetitionPredictionForPlayer: (userId: string, event: FormEvent<HTMLFormElement>) => void
@@ -200,44 +207,47 @@ export function DashboardPage({
       ) : null}
 
       {adminMode && isAdmin ? (
-        <AdminPage
-          competitionPredictionDeadline={competitionPredictionDeadline}
-          competitionPredictionResult={competitionPredictionResult}
-          competitionPredictions={competitionPredictions}
-          matches={matches}
-          knockout={knockout}
-          playerStats={playerStats}
-          players={players}
-          predictions={predictions}
-          rounds={rounds}
-          teams={teams}
-          teamMap={teamMap}
-          onAddKnockoutTie={onAddKnockoutTie}
-          onAddPlayerStat={onAddPlayerStat}
-          onAddTeam={onAddTeam}
-          onApproveUser={onApproveUser}
-          onDeletePlayer={onDeletePlayer}
-          onDeleteKnockoutTie={onDeleteKnockoutTie}
-          onDeletePlayerStat={onDeletePlayerStat}
-          onDeleteTeam={onDeleteTeam}
-          onKnockoutScoreChange={onKnockoutScoreChange}
-          onKnockoutLegDeadlineChange={onKnockoutLegDeadlineChange}
-          onPublishCompetitionPredictionResult={onPublishCompetitionPredictionResult}
-          onSaveCompetitionPredictionDeadline={onSaveCompetitionPredictionDeadline}
-          onSaveCompetitionPredictionForPlayer={onSaveCompetitionPredictionForPlayer}
-          onPublishKnockoutScore={onPublishKnockoutScore}
-          onDeleteRound={onDeleteRound}
-          onPublishRound={onPublishRound}
-          onPublishScore={onPublishScore}
-          onRealScoreChange={onRealScoreChange}
-          onSaveCompetitionPredictionResult={onSaveCompetitionPredictionResult}
-          onSaveRoundOf16={onSaveRoundOf16}
-          onSaveRound={onSaveRound}
-          onKnockoutTeamSlotChange={onKnockoutTeamSlotChange}
-          onUpdatePlayerStat={onUpdatePlayerStat}
-          onUpdateTeam={onUpdateTeam}
-          onWinnerChange={onWinnerChange}
-        />
+        <Suspense fallback={<p className="muted-text admin-loading">Carregando painel…</p>}>
+          <AdminPage
+            competitionPredictionDeadline={competitionPredictionDeadline}
+            competitionPredictionResult={competitionPredictionResult}
+            competitionPredictions={competitionPredictions}
+            matches={matches}
+            knockout={knockout}
+            playerStats={playerStats}
+            players={players}
+            predictions={predictions}
+            rounds={rounds}
+            teams={teams}
+            teamMap={teamMap}
+            onAddKnockoutTie={onAddKnockoutTie}
+            onAddPlayerStat={onAddPlayerStat}
+            onAddTeam={onAddTeam}
+            onApproveUser={onApproveUser}
+            onDeletePlayer={onDeletePlayer}
+            onDeleteKnockoutTie={onDeleteKnockoutTie}
+            onDeletePlayerStat={onDeletePlayerStat}
+            onDeleteTeam={onDeleteTeam}
+            onKnockoutScoreChange={onKnockoutScoreChange}
+            onKnockoutLegDeadlineChange={onKnockoutLegDeadlineChange}
+            onPublishCompetitionPredictionResult={onPublishCompetitionPredictionResult}
+            onSaveCompetitionPredictionDeadline={onSaveCompetitionPredictionDeadline}
+            onSaveCompetitionPredictionForPlayer={onSaveCompetitionPredictionForPlayer}
+            onPublishKnockoutScore={onPublishKnockoutScore}
+            onDeleteRound={onDeleteRound}
+            onPublishRound={onPublishRound}
+            onPublishScore={onPublishScore}
+            onRealScoreChange={onRealScoreChange}
+            onSaveCompetitionPredictionResult={onSaveCompetitionPredictionResult}
+            onSaveRoundOf16={onSaveRoundOf16}
+            onSaveRound={onSaveRound}
+            onKnockoutTeamSlotChange={onKnockoutTeamSlotChange}
+            onUpdatePlayerStat={onUpdatePlayerStat}
+            onUpdateTeam={onUpdateTeam}
+            onWinnerChange={onWinnerChange}
+          />
+
+        </Suspense>
       ) : null}
 
       {!adminMode && activeView === 'palpites' ? (
@@ -276,7 +286,7 @@ export function DashboardPage({
         )
       ) : null}
 
-      {!adminMode && activeView === 'ranking' ? <RankingPage lastScoredRoundId={lastScoredRoundId} players={players} ranking={ranking} /> : null}
+      {!adminMode && activeView === 'ranking' ? <RankingPage currentUserId={currentUser.id} lastScoredRoundId={lastScoredRoundId} players={players} ranking={ranking} /> : null}
 
       {!adminMode && activeView === 'champions' ? (
         <ChampionsPage standings={standings} />

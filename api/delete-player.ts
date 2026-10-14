@@ -80,6 +80,7 @@ async function deletePlayerData(userId: string) {
     }
   }
 
+  await db.collection('profiles').doc(userId).delete()
   await db.collection('users').doc(userId).delete()
 }
 

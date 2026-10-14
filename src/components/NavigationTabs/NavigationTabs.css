@@ -47,25 +47,31 @@
   color: #001e67;
 }
 
-.tabs button:hover {
-  animation: card-border-flow 4.5s linear infinite;
-  background:
-    linear-gradient(180deg, rgba(7, 25, 76, 0.96), rgba(3, 15, 52, 0.96)) padding-box,
-    var(--interactive-border) border-box;
-  border-color: transparent;
-  box-shadow: 0 0 24px rgba(14, 165, 233, 0.16);
-  transform: translateY(-1px);
-}
+/* So com mouse: na tela de toque o :hover gruda na aba tocada e ela fica com a
+   borda cromada mesmo depois de trocar de aba. */
+@media (hover: hover) {
+  .tabs button:hover {
+    animation: card-border-flow 4.5s linear infinite;
+    background:
+      linear-gradient(180deg, rgba(7, 25, 76, 0.96), rgba(3, 15, 52, 0.96)) padding-box,
+      var(--interactive-border) border-box;
+    border-color: transparent;
+    box-shadow: 0 0 24px rgba(14, 165, 233, 0.16);
+    transform: translateY(-1px);
+  }
 
-.tabs button.active:hover {
-  animation: card-border-flow 4.5s linear infinite;
-  background:
-    linear-gradient(180deg, #ffffff, #b9e6ff) padding-box,
-    var(--interactive-border) border-box;
+  .tabs button.active:hover {
+    animation: card-border-flow 4.5s linear infinite;
+    background:
+      linear-gradient(180deg, #ffffff, #b9e6ff) padding-box,
+      var(--interactive-border) border-box;
+  }
 }
 
 @media (max-width: 620px) {
+  /* Abas que nao cabem somem num degrade na borda, indicando que da para rolar. */
   .tabs {
+    mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
     border-radius: 14px;
     gap: 8px;
     margin-top: 18px;

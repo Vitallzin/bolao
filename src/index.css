@@ -21,6 +21,10 @@
   --sans: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --display: 'Oswald', 'Inter', ui-sans-serif, system-ui, sans-serif;
 
+  /* Starball (mesmo desenho do logo) para marca d'agua: contorno e estrelas em
+     ciano; quem usa controla o tamanho e a opacidade. */
+  --starball-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='none' stroke='%2338e1ff' stroke-width='1'/%3E%3Cpath fill='%2338e1ff' d='M32.0,24.0L34.0,29.3L39.6,29.5L35.2,33.0L36.7,38.5L32.0,35.4L27.3,38.5L28.8,33.0L24.4,29.5L30.0,29.3ZM32.0,8.0L33.0,10.6L35.8,10.8L33.6,12.5L34.4,15.2L32.0,13.7L29.6,15.2L30.4,12.5L28.2,10.8L31.0,10.6ZM32.0,48.0L33.0,50.6L35.8,50.8L33.6,52.5L34.4,55.2L32.0,53.7L29.6,55.2L30.4,52.5L28.2,50.8L31.0,50.6ZM14.0,18.0L15.0,20.6L17.8,20.8L15.6,22.5L16.4,25.2L14.0,23.7L11.6,25.2L12.4,22.5L10.2,20.8L13.0,20.6ZM50.0,18.0L51.0,20.6L53.8,20.8L51.6,22.5L52.4,25.2L50.0,23.7L47.6,25.2L48.4,22.5L46.2,20.8L49.0,20.6ZM14.0,38.0L15.0,40.6L17.8,40.8L15.6,42.5L16.4,45.2L14.0,43.7L11.6,45.2L12.4,42.5L10.2,40.8L13.0,40.6ZM50.0,38.0L51.0,40.6L53.8,40.8L51.6,42.5L52.4,45.2L50.0,43.7L47.6,45.2L48.4,42.5L46.2,40.8L49.0,40.6ZM22.0,29.0L22.7,31.0L24.9,31.1L23.2,32.4L23.8,34.4L22.0,33.3L20.2,34.4L20.8,32.4L19.1,31.1L21.3,31.0ZM42.0,29.0L42.7,31.0L44.9,31.1L43.2,32.4L43.8,34.4L42.0,33.3L40.2,34.4L40.8,32.4L39.1,31.1L41.3,31.0Z'/%3E%3C/svg%3E");
+
   /* Rotating chrome/steel ring used on focus, active and confirm surfaces */
   --interactive-border: conic-gradient(
     from var(--card-border-angle),
@@ -66,6 +70,12 @@
   box-sizing: border-box;
 }
 
+/* Reserva o espaco da barra de rolagem: sem isso, numa aba curta (sem barra) o
+   layout inteiro pulava alguns pixels para o lado ao trocar de aba. */
+html {
+  scrollbar-gutter: stable;
+}
+
 body {
   margin: 0;
 }
@@ -81,6 +91,19 @@ input:focus-visible,
 select:focus-visible {
   outline: 3px solid rgba(56, 225, 255, 0.4);
   outline-offset: 2px;
+}
+
+/* Sem as setinhas do campo numerico: no desktop elas ocupam espaco a direita e
+   tiram o numero do centro da caixa do placar. Digitar continua igual. */
+input[type='number'] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 input::placeholder {
@@ -116,6 +139,22 @@ h2 {
 
 p {
   margin-bottom: 0;
+}
+
+/* Rotulo com versao curta para o celular: <span class="label-long"> e
+   <span class="label-short"> lado a lado, o CSS mostra um ou outro. */
+.label-short {
+  display: none;
+}
+
+@media (max-width: 620px) {
+  .label-long {
+    display: none;
+  }
+
+  .label-short {
+    display: inline;
+  }
 }
 
 #root {

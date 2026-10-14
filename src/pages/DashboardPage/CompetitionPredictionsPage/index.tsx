@@ -46,9 +46,10 @@ export function CompetitionPredictionsPage({
           <span className="eyebrow">Antes da Champions</span>
           <h2>Previsões da competição</h2>
         </div>
-        <span className={locked ? 'status-pill status-pill--locked' : 'status-pill'}>
+        {/* Enviada e um estado bom: fica no ciano. O rosa e so para quem perdeu o prazo. */}
+        <span className={deadlinePassed && !existingPrediction ? 'status-pill status-pill--locked' : 'status-pill'}>
           {existingPrediction
-            ? 'Enviada'
+            ? '✓ Enviada'
             : deadlinePassed
               ? 'Fechada'
               : `Aberta até ${formatDateTime(competitionPredictionDeadline)}`}
@@ -60,6 +61,9 @@ export function CompetitionPredictionsPage({
         key={existingPrediction?.id ?? 'empty'}
         onSubmit={onSubmitCompetitionPrediction}
       >
+        {/* Uma vez so, no topo: vale para todos os campos de nome. Depois de enviar nao ha mais o que digitar. */}
+        {locked ? null : <PlayerNameHint />}
+
         <PredictionTopFive
           disabled={locked}
           label="Top 5 artilheiros"
@@ -83,7 +87,6 @@ export function CompetitionPredictionsPage({
             Melhor goleiro
             <input disabled={locked} name="bestGoalkeeper" defaultValue={existingPrediction?.bestGoalkeeper ?? ''} />
           </label>
-          <PlayerNameHint />
         </section>
 
         <section className="competition-predictions-card">
@@ -140,7 +143,6 @@ function PredictionTopFive({
           <input disabled={disabled} name={`${name}-${index + 1}`} defaultValue={values[index] ?? ''} />
         </label>
       ))}
-      <PlayerNameHint />
     </section>
   )
 }

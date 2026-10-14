@@ -1,8 +1,9 @@
 .knockout-bracket {
+  /* Navy como o resto do site, com um brilho no centro, onde fica a final. */
   background:
-    radial-gradient(circle at 50% 50%, rgba(125, 211, 252, 0.2), transparent 26%),
-    linear-gradient(135deg, rgba(6, 24, 108, 0.98), rgba(20, 37, 148, 0.98) 48%, rgba(3, 117, 154, 0.94));
-  border: 1px solid rgba(125, 211, 252, 0.28);
+    radial-gradient(circle at 50% 48%, rgba(56, 225, 255, 0.16), transparent 30%),
+    linear-gradient(160deg, rgba(7, 25, 76, 0.98), rgba(3, 15, 52, 0.98));
+  border: 1px solid var(--app-border);
   border-radius: 10px;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 20px 55px rgba(0, 0, 0, 0.26);
   min-height: 606px;
@@ -29,9 +30,11 @@
 
 .knockout-bracket__grid {
   display: grid;
-  gap: 28px;
-  grid-template-columns: 210px 160px 150px 170px 150px 160px 210px;
-  min-width: 1308px;
+  /* 1018px de colunas + 6 x 16px de vao = 1114px: cabe inteiro nos 1180px do
+     conteudo no desktop. Abaixo disso (tablet/celular) o quadro rola de lado. */
+  gap: 16px;
+  grid-template-columns: 172px 136px 126px 150px 126px 136px 172px;
+  min-width: 1114px;
   position: relative;
   z-index: 1;
 }
@@ -42,13 +45,15 @@
 }
 
 .knockout-bracket__column h3 {
-  background: rgba(125, 211, 252, 0.9);
-  border-radius: 4px;
-  color: #04335c;
+  background: rgba(56, 225, 255, 0.1);
+  border: 1px solid rgba(56, 225, 255, 0.4);
+  border-radius: 999px;
+  color: #9becff;
+  letter-spacing: 0.06em;
   font-size: 0.68rem;
   font-weight: 900;
   margin: 0 auto 12px;
-  padding: 3px 8px;
+  padding: 3px 10px;
   text-align: center;
   text-transform: uppercase;
   width: max-content;
@@ -82,29 +87,29 @@
 .knockout-bracket__match--round16-right {
   --match-offset: 2px;
   --match-step: 118px;
-  --match-width: 210px;
+  --match-width: 172px;
 }
 
 .knockout-bracket__match--quarters-left,
 .knockout-bracket__match--quarters-right {
   --match-offset: 61px;
   --match-step: 236px;
-  --match-width: 160px;
+  --match-width: 136px;
 }
 
 .knockout-bracket__match--semis-left,
 .knockout-bracket__match--semis-right {
   --match-offset: 176px;
   --match-step: 236px;
-  --match-width: 150px;
+  --match-width: 126px;
 }
 
 .knockout-bracket__match--final-center {
   --connector-line-top: 31px;
-  --connector-width: 28px;
+  --connector-width: 16px;
   --match-offset: 176px;
   --match-step: 236px;
-  --match-width: 170px;
+  --match-width: 150px;
 }
 
 .knockout-bracket__match:not(.knockout-bracket__match--final-center)::after {
@@ -139,7 +144,7 @@
 .knockout-bracket__match--semis-left {
   --connector-height: 118px;
   --connector-line-top: 31px;
-  --connector-width: 28px;
+  --connector-width: 16px;
 }
 
 .knockout-bracket__match--quarters-left {
@@ -168,7 +173,7 @@
 .knockout-bracket__match--semis-right {
   --connector-height: 118px;
   --connector-line-top: 31px;
-  --connector-width: 28px;
+  --connector-width: 16px;
 }
 
 .knockout-bracket__match--quarters-right {
@@ -205,10 +210,14 @@
 
 .knockout-bracket__team {
   align-items: center;
-  background: linear-gradient(90deg, rgba(234, 246, 255, 0.96), rgba(178, 229, 255, 0.9));
-  border: 1px solid rgba(255, 255, 255, 0.74);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
-  color: #001e67;
+  /* Cartao escuro com fio ciano na lateral, no lugar da caixa branca que
+     destoava do resto do site. */
+  background: linear-gradient(90deg, rgba(16, 38, 102, 0.98), rgba(9, 26, 78, 0.98));
+  border: 1px solid rgba(142, 202, 255, 0.24);
+  border-left: 3px solid rgba(56, 225, 255, 0.55);
+  border-radius: 6px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.22);
+  color: var(--app-title);
   display: flex;
   gap: 7px;
   min-height: 34px;
@@ -258,10 +267,10 @@
 
 .knockout-bracket__remove {
   align-items: center;
-  background: rgba(4, 51, 92, 0.14);
-  border: 1px solid rgba(4, 51, 92, 0.35);
+  background: rgba(226, 242, 255, 0.1);
+  border: 1px solid rgba(186, 230, 253, 0.35);
   border-radius: 999px;
-  color: #04335c;
+  color: #cfe9ff;
   cursor: pointer;
   display: flex;
   flex: 0 0 auto;
@@ -277,12 +286,14 @@
 }
 
 .knockout-bracket__remove:hover {
-  background: #ffffff;
+  background: rgba(255, 123, 123, 0.2);
+  border-color: rgba(255, 123, 123, 0.6);
+  color: #ffb3b3;
 }
 
 .knockout-bracket__team .team-badge,
 .knockout-bracket__team .team-badge--empty {
-  color: #001e67;
+  color: var(--app-title);
   flex: 1 1 auto;
   font-size: 0.8rem;
   font-weight: 850;
@@ -305,10 +316,12 @@
   width: 18px;
 }
 
+/* Quem avancou acende: mesmo cartao, com o ciano assumindo o fundo e a borda. */
 .knockout-bracket__team--winner {
-  background: linear-gradient(90deg, #ffffff, #67e8f9);
-  border-color: #ffffff;
-  box-shadow: 0 0 20px rgba(103, 232, 249, 0.34);
+  background: linear-gradient(90deg, rgba(56, 225, 255, 0.3), rgba(30, 91, 255, 0.28));
+  border-color: rgba(56, 225, 255, 0.7);
+  border-left-color: #38e1ff;
+  box-shadow: 0 0 20px rgba(56, 225, 255, 0.3);
 }
 
 @media (max-width: 620px) {
@@ -317,4 +330,18 @@
     min-height: 606px;
     padding: 18px 14px;
   }
+}
+
+/* Ainda sem time: so o tracejado, mais apagado que um confronto definido. */
+.knockout-bracket__team:has(.team-badge--empty) {
+  background: rgba(7, 25, 76, 0.6);
+  border-style: dashed;
+  border-left-style: solid;
+  border-left-color: rgba(142, 202, 255, 0.3);
+  box-shadow: none;
+}
+
+.knockout-bracket__team .team-badge--empty {
+  color: var(--app-muted);
+  font-weight: 700;
 }

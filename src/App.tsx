@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { deleteUser } from 'firebase/auth'
 import { doc, writeBatch } from 'firebase/firestore'
 import { DashboardPage } from './pages/DashboardPage'
-import { LoginPage, VerifyEmailPage } from './pages/LoginPage'
 import { competitionId } from './constants'
-import { db } from './firebase'
+import { clearLocalData, db } from './firebase'
 import { useAuthProfile } from './hooks/useAuthProfile'
 import { useCompetitionActions } from './hooks/useCompetitionActions'
 import { useCompetitionData } from './hooks/useCompetitionData'
@@ -12,6 +11,14 @@ import type { View } from './types'
 import { getFirebaseMessage } from './utils/firebaseErrors'
 import { buildStandings } from './utils/scoring'
 import './App.css'
+
+// Login e confirmacao de e-mail so aparecem para quem nao esta logado: num
+// arquivo separado, quem ja tem sessao nao baixa essas telas ao recarregar.
+const LoginPage = lazy(() => import('./pages/LoginPage').then((module) => ({ default: module.LoginPage })))
+const VerifyEmailPage = lazy(() =>
+  import('./pages/LoginPage').then((module) => ({ default: module.VerifyEmailPage })),
+)
+const loadingScreen = <main className="loading-screen">Carregando bolão...</main>
 
 function App() {
   const {
@@ -29,7 +36,6 @@ function App() {
     messageId,
     refreshEmailVerification,
     resendVerificationEmail,
-    setCurrentUser,
     setMessage,
   } = useAuthProfile()
   const {
@@ -47,7 +53,7 @@ function App() {
     rankingLoaded,
     rounds,
     teams,
-  } = useCompetitionData(authUser)
+  } = useCompetitionData(authUser, currentUser?.role === 'admin')
   const rankingRepairedRef = useRef(false)
   const [activeView, setActiveView] = useState<View>('palpites')
   const [adminMode, setAdminMode] = useState(false)
@@ -74,21 +80,6 @@ function App() {
     setMessage,
   })
 
-  useEffect(() => {
-    if (!authUser) {
-      return
-    }
-
-    const updatedProfile = players.find((player) => player.id === authUser.uid)
-
-    if (updatedProfile) {
-      setCurrentUser({
-        ...updatedProfile,
-        photoURL: updatedProfile.photoURL || authUser.photoURL || null,
-      })
-    }
-  }, [authUser, players, setCurrentUser])
-
   /**
    * O recalculo dispara nas publicacoes do admin. Se o ranking nunca chegou a ser
    * gravado (conta nova, ou placares publicados antes do recalculo existir), ele
@@ -107,6 +98,22 @@ function App() {
       }
     })
   }, [actions, isAdmin, ranking.length, rankingLoaded, setMessage])
+
+  /**
+   * Palpites gravados antes do roundId existir ficam invisiveis na aba "Palpites
+   * dos jogadores" (as regras liberam por roundId). O recalculo do ranking, no
+   * servidor, completa o campo; o admin dispara uma vez ao abrir se faltar algum.
+   */
+  const roundIdBackfillRef = useRef(false)
+
+  useEffect(() => {
+    if (!isAdmin || roundIdBackfillRef.current || !predictions.some((prediction) => !prediction.roundId)) {
+      return
+    }
+
+    roundIdBackfillRef.current = true
+    void actions.recalculateRanking()
+  }, [actions, isAdmin, predictions])
 
   async function logout() {
     await handleLogout()
@@ -140,10 +147,14 @@ function App() {
           batch.delete(doc(db, 'competitions', competitionId, 'competitionPredictions', prediction.id))
         })
 
+      batch.delete(doc(db, 'profiles', currentUser.id))
       batch.delete(doc(db, 'users', currentUser.id))
 
       await batch.commit()
       await deleteUser(authUser)
+      // Conta apagada: o cache local tambem vai embora (mesmo cuidado do logout).
+      await clearLocalData()
+      window.location.reload()
     } catch (error) {
       setMessage(getFirebaseMessage(error))
       throw error
@@ -167,29 +178,33 @@ function App() {
   }
 
   if (loading) {
-    return <main className="loading-screen">Carregando bolão...</main>
+    return loadingScreen
   }
 
   if (!currentUser) {
     return (
-      <LoginPage
-        message={message}
-        onEmailLogin={handleEmailLogin}
-        onEmailSignUp={handleEmailSignUp}
-        onGoogleLogin={handleGoogleLogin}
-      />
+      <Suspense fallback={loadingScreen}>
+        <LoginPage
+          message={message}
+          onEmailLogin={handleEmailLogin}
+          onEmailSignUp={handleEmailSignUp}
+          onGoogleLogin={handleGoogleLogin}
+        />
+      </Suspense>
     )
   }
 
   if (!emailVerified) {
     return (
-      <VerifyEmailPage
-        email={currentUser.email}
-        message={message}
-        onCheckAgain={refreshEmailVerification}
-        onLogout={logout}
-        onResend={resendVerificationEmail}
-      />
+      <Suspense fallback={loadingScreen}>
+        <VerifyEmailPage
+          email={currentUser.email}
+          message={message}
+          onCheckAgain={refreshEmailVerification}
+          onLogout={logout}
+          onResend={resendVerificationEmail}
+        />
+      </Suspense>
     )
   }
 

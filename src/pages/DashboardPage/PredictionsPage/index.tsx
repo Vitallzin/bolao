@@ -21,8 +21,8 @@ type PredictionsPageProps = {
     leg: 'home' | 'away',
     side: 'homeScore' | 'awayScore',
     value: string,
-  ) => void
-  onPredictionChange: (matchId: string, side: 'homeScore' | 'awayScore', value: string) => void
+  ) => Promise<boolean>
+  onPredictionChange: (matchId: string, side: 'homeScore' | 'awayScore', value: string) => Promise<boolean>
   players: Player[]
   predictions: Prediction[]
   ranking: RankingEntry[]

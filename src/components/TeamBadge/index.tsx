@@ -1,5 +1,6 @@
 import type { Team } from '../../types'
 import { getFlagUrl } from '../../utils/europeanCountries'
+import { getQualificationZone } from '../../utils/scoring'
 import './TeamBadge.css'
 
 type TeamBadgeProps = {
@@ -36,15 +37,3 @@ export function TeamBadge({ align = 'left', rank, team }: TeamBadgeProps) {
   )
 }
 
-/** 1o-8o vao direto as oitavas, 9o-24o disputam os playoffs, o resto esta eliminado. */
-function getQualificationZone(rank: number) {
-  if (rank <= 8) {
-    return 'direct'
-  }
-
-  if (rank <= 24) {
-    return 'playoff'
-  }
-
-  return null
-}

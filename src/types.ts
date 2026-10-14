@@ -60,6 +60,8 @@ export type Prediction = {
   id: string
   userId: string
   matchId: string
+  /** Rodada da partida; palpites antigos nao tem ate o servidor completar. */
+  roundId?: string
   homeScore: number
   awayScore: number
 }

@@ -1,3 +1,4 @@
+import { SaveStatus, type SaveState } from '../../../../../components/SaveStatus'
 import { TeamBadge } from '../../../../../components/TeamBadge'
 import type { KnockoutPrediction, KnockoutTie, Player, Team } from '../../../../../types'
 import { calculateKnockoutPredictionPoints } from '../../../../../utils/scoring'
@@ -12,7 +13,9 @@ type KnockoutPredictionCardProps = {
     leg: 'home' | 'away',
     side: 'homeScore' | 'awayScore',
     value: string,
-  ) => void
+  ) => unknown
+  /** Andamento da gravacao em curso; sem ele vale o que o palpite ja diz (existe = salvo). */
+  saveState?: SaveState
   teamMap: Map<string, Team>
   tie: KnockoutTie
 }
@@ -22,6 +25,7 @@ export function KnockoutPredictionCard({
   knockoutPredictions,
   leg,
   onKnockoutPredictionChange,
+  saveState,
   teamMap,
   tie,
 }: KnockoutPredictionCardProps) {
@@ -77,6 +81,7 @@ export function KnockoutPredictionCard({
       </div>
 
       {points !== null ? <strong className="knockout-prediction-points">{points} pts</strong> : null}
+      {locked ? null : <SaveStatus state={saveState ?? (prediction ? 'saved' : 'idle')} />}
     </article>
   )
 }

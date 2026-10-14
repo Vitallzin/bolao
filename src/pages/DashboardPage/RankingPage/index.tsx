@@ -3,11 +3,19 @@ import type { Player, RankingEntry } from '../../../types'
 import './RankingPage.css'
 
 type RankingPageProps = {
+  currentUserId: string
   lastScoredRoundId?: string | null
   players: Player[]
   ranking: RankingEntry[]
 }
 
-export function RankingPage({ lastScoredRoundId, players, ranking }: RankingPageProps) {
-  return <RankingView lastScoredRoundId={lastScoredRoundId} players={players} ranking={ranking} />
+export function RankingPage({ currentUserId, lastScoredRoundId, players, ranking }: RankingPageProps) {
+  return (
+    <RankingView
+      currentUserId={currentUserId}
+      lastScoredRoundId={lastScoredRoundId}
+      players={players}
+      ranking={ranking}
+    />
+  )
 }

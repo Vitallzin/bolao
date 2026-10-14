@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { EmptyState } from '../EmptyState'
+import { SaveStatus, type SaveState } from '../SaveStatus'
+import { useSaveTracker } from '../SaveStatus/useSaveTracker'
 import { TeamBadge } from '../TeamBadge'
 import { KnockoutPredictionCard } from '../../pages/DashboardPage/KnockoutPage/components/KnockoutPredictionCard'
 import type {
@@ -26,8 +28,8 @@ type PredictionsViewProps = {
     leg: 'home' | 'away',
     side: 'homeScore' | 'awayScore',
     value: string,
-  ) => void
-  onPredictionChange: (matchId: string, side: 'homeScore' | 'awayScore', value: string) => void
+  ) => Promise<boolean>
+  onPredictionChange: (matchId: string, side: 'homeScore' | 'awayScore', value: string) => Promise<boolean>
   players: Player[]
   predictions: Prediction[]
   ranking: RankingEntry[]
@@ -162,7 +164,7 @@ function RoundPredictions({
   currentUser: Player
   matches: Match[]
   onOthersUserChange: (userId: string) => void
-  onPredictionChange: (matchId: string, side: 'homeScore' | 'awayScore', value: string) => void
+  onPredictionChange: (matchId: string, side: 'homeScore' | 'awayScore', value: string) => Promise<boolean>
   othersUserId: string
   players: Player[]
   predictions: Prediction[]
@@ -172,6 +174,7 @@ function RoundPredictions({
 }) {
   const locked = new Date() >= round.deadline
   const [viewMode, setViewMode] = useState<'mine' | 'others'>('mine')
+  const { states: saveStates, track } = useSaveTracker()
   const matchesByDay = [1, 2].map((day) => ({
     day,
     matches: matches.filter((match) => match.day === day),
@@ -222,7 +225,8 @@ function RoundPredictions({
         aria-selected={viewMode === 'others'}
         onClick={() => setViewMode('others')}
       >
-        Palpites dos jogadores
+        <span className="label-long">Palpites dos jogadores</span>
+        <span className="label-short">Dos jogadores</span>
       </button>
     </div>
   ) : null
@@ -268,7 +272,10 @@ function RoundPredictions({
           </div>
           {/* Com resultado as linhas ganham rotulo e etiqueta de pontos; a classe abaixo
               iguala a altura de todas para o Dia 1 e o Dia 2 ficarem alinhados. */}
-          <div className={hasResults ? 'match-days match-days--scored' : 'match-days'}>
+          <div
+            className={hasResults ? 'match-days match-days--scored' : 'match-days'}
+            style={{ '--match-rows': Math.max(...matchesByDay.map((item) => item.matches.length)) } as CSSProperties}
+          >
             {matchesByDay.map(({ day, matches: dayMatches }) => (
               <section className="match-day" key={day}>
                 <h3>Dia {day}</h3>
@@ -287,6 +294,8 @@ function RoundPredictions({
 
                     // Cravou o placar? Mostrar o placar real seria repetir o mesmo numero.
                     const showRealScore = finished && matchPoints !== stagePointTables.early.exact
+                    // Palpite que ja existe aparece como salvo mesmo depois de recarregar a pagina.
+                    const saveState: SaveState = saveStates[match.id] ?? (prediction ? 'saved' : 'idle')
 
                     return (
                       <article className="match-row" key={match.id}>
@@ -303,7 +312,7 @@ function RoundPredictions({
                                 placeholder="0"
                                 type="number"
                                 value={prediction?.homeScore ?? ''}
-                                onChange={(event) => onPredictionChange(match.id, 'homeScore', event.target.value)}
+                                onChange={(event) => track(match.id, () => onPredictionChange(match.id, 'homeScore', event.target.value))}
                               />
                               <span className="versus">x</span>
                               <input
@@ -313,7 +322,7 @@ function RoundPredictions({
                                 placeholder="0"
                                 type="number"
                                 value={prediction?.awayScore ?? ''}
-                                onChange={(event) => onPredictionChange(match.id, 'awayScore', event.target.value)}
+                                onChange={(event) => track(match.id, () => onPredictionChange(match.id, 'awayScore', event.target.value))}
                               />
                             </div>
                           </div>
@@ -333,6 +342,7 @@ function RoundPredictions({
                         <TeamBadge team={teamMap.get(match.awayTeamId)} align="right" />
 
                         {matchPoints !== null ? <MatchPoints points={matchPoints} /> : null}
+                        {locked ? null : <SaveStatus state={saveState} />}
                       </article>
                     )
                   })}
@@ -441,7 +451,7 @@ function OtherPlayersPredictions({
 
   return (
     <>
-      <div className="round-status-line predictions-status-line">
+      <div className="round-status-line predictions-status-line others-status-line">
         <div className="round-nav others-player-nav">
           <button
             type="button"
@@ -479,7 +489,10 @@ function OtherPlayersPredictions({
         </div>
       </div>
 
-      <div className={hasResults ? 'match-days match-days--scored' : 'match-days'}>
+      <div
+        className={hasResults ? 'match-days match-days--scored' : 'match-days'}
+        style={{ '--match-rows': Math.max(...[1, 2].map((day) => matches.filter((match) => match.day === day).length)) } as CSSProperties}
+      >
         {[1, 2].map((day) => (
           <section className="match-day" key={day}>
             <h3>Dia {day}</h3>
@@ -603,13 +616,14 @@ function KnockoutPredictions({
     leg: 'home' | 'away',
     side: 'homeScore' | 'awayScore',
     value: string,
-  ) => void
+  ) => Promise<boolean>
   stage: string
   teamMap: Map<string, Team>
   ties: KnockoutTie[]
 }) {
   const isFinal = stage === 'final'
   const [activeLeg, setActiveLeg] = useState<'home' | 'away'>('home')
+  const { states: saveStates, track } = useSaveTracker()
 
   useEffect(() => {
     setActiveLeg('home')
@@ -666,7 +680,9 @@ function KnockoutPredictions({
             leg={leg}
             teamMap={teamMap}
             tie={tie}
-            onKnockoutPredictionChange={onKnockoutPredictionChange}
+            saveState={saveStates[`${tie.id}_${leg}`]}
+            onKnockoutPredictionChange={(tieId, tieLeg, side, value) =>
+              track(`${tieId}_${tieLeg}`, () => onKnockoutPredictionChange(tieId, tieLeg, side, value))}
           />
         ))}
       </div>

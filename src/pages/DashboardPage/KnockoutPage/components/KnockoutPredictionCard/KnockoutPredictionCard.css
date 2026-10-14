@@ -80,3 +80,12 @@
     min-width: 38px;
   }
 }
+
+/* Mesmo placar condensado da fase de liga. */
+.knockout-prediction-row input,
+.knockout-prediction-points {
+  font-family: var(--display);
+  font-size: 1.2rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}

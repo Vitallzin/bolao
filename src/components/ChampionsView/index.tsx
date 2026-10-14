@@ -1,6 +1,6 @@
 import { EmptyState } from '../EmptyState'
 import { TeamBadge } from '../TeamBadge'
-import { buildStandings } from '../../utils/scoring'
+import { buildStandings, getQualificationZone } from '../../utils/scoring'
 import './ChampionsView.css'
 
 type ChampionsViewProps = {
@@ -31,31 +31,37 @@ export function ChampionsView({ standings }: ChampionsViewProps) {
           <thead>
             <tr>
               <th>Time</th>
-              <th>Pts</th>
               <th>J</th>
               <th className="col-optional">V</th>
               <th className="col-optional">E</th>
               <th className="col-optional">D</th>
               <th>SG</th>
+              <th className="col-points">Pts</th>
             </tr>
           </thead>
           <tbody>
             {standings.map((row, index) => (
-              <tr key={row.team.id}>
+              <tr className={`standings-row standings-row--${getQualificationZone(index + 1) ?? 'out'}`} key={row.team.id}>
                 <td>
                   <TeamBadge rank={index + 1} team={row.team} />
                 </td>
-                <td>{row.points}</td>
                 <td>{row.played}</td>
                 <td className="col-optional">{row.wins}</td>
                 <td className="col-optional">{row.draws}</td>
                 <td className="col-optional">{row.losses}</td>
-                <td>{row.goalDifference}</td>
+                <td>{row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}</td>
+                <td className="col-points">{row.points}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      <ul className="standings-legend" aria-label="Legenda da tabela">
+        <li className="standings-legend__item standings-legend__item--direct">Oitavas de final</li>
+        <li className="standings-legend__item standings-legend__item--playoff">Playoffs</li>
+        <li className="standings-legend__item standings-legend__item--out">Eliminado</li>
+      </ul>
     </section>
   )
 }

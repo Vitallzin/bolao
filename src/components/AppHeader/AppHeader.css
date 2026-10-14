@@ -501,3 +501,88 @@
     width: 100%;
   }
 }
+
+/* Celular: tudo numa linha so — marca a esquerda; admin (rotulo curto) e avatar
+   a direita. Empilhado, o cabecalho ocupava ~230px e empurrava a rodada para
+   baixo da dobra. O nome do jogador continua no menu da conta. */
+@media (max-width: 620px) {
+  .topbar {
+    align-items: center;
+    flex-direction: row;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .topbar__brand {
+    flex: 1 1 auto;
+    gap: 10px;
+  }
+
+  .brand-starball svg {
+    height: 36px;
+    width: 36px;
+  }
+
+  .topbar .eyebrow {
+    font-size: 0.66rem;
+  }
+
+  /* Quebra em duas linhas em vez de cortar ("Bolao dos a..."). */
+  .topbar h1 {
+    font-size: 1.3rem;
+    line-height: 1.05;
+  }
+
+  .topbar__brand > div {
+    min-width: 0;
+  }
+
+  .topbar__actions {
+    align-items: center;
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    gap: 8px;
+    width: auto;
+  }
+
+  .topbar__actions .button {
+    font-size: 0.82rem;
+    min-height: 40px;
+    padding: 8px 12px;
+  }
+
+  .account-menu {
+    flex: 0 0 auto;
+  }
+
+  .account-menu__trigger {
+    padding: 2px;
+    width: auto;
+  }
+
+  .account-menu__name,
+  .account-menu__arrow {
+    display: none;
+  }
+}
+
+/* Starball gigante e quase transparente vazando pela direita do cabecalho,
+   como nas artes da Champions. Fica num pseudo do tamanho do cartao, entao o
+   corte acontece na borda dele e nada vaza para fora. */
+.topbar::before {
+  background: var(--starball-mark) no-repeat right -60px center / 260px;
+  border-radius: inherit;
+  content: '';
+  inset: 0;
+  opacity: 0.08;
+  pointer-events: none;
+  position: absolute;
+  z-index: -1;
+}
+
+@media (max-width: 620px) {
+  .topbar::before {
+    background-position: right -50px center;
+    background-size: 170px;
+  }
+}

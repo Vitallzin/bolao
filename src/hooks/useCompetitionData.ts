@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { User } from 'firebase/auth'
-import { collection, onSnapshot } from 'firebase/firestore'
-import { competitionId, defaultNotificationPreferences } from '../constants'
+import { collection, onSnapshot, query, where, type Query } from 'firebase/firestore'
+import { competitionId } from '../constants'
 import { db } from '../firebase'
 import type {
   CompetitionPrediction,
@@ -17,8 +17,15 @@ import type {
   Team,
 } from '../types'
 import { toDate } from '../utils/date'
+import { publicProfileToPlayer, userDocToPlayer } from '../utils/userProfile'
 
-export function useCompetitionData(authUser: User | null) {
+/**
+ * Dados da competicao em tempo real. Os palpites nao vem mais da colecao
+ * inteira: as regras do Firestore so deixam cada um ler os proprios, os da
+ * rodada que ja fechou e (admin) todos — entao as consultas pedem exatamente
+ * isso, senao o servidor recusaria a leitura.
+ */
+export function useCompetitionData(authUser: User | null, isAdmin: boolean) {
   const [teams, setTeams] = useState<Team[]>([])
   const [rounds, setRounds] = useState<Round[]>([])
   const [matches, setMatches] = useState<Match[]>([])
@@ -40,45 +47,6 @@ export function useCompetitionData(authUser: User | null) {
     }
 
     const unsubscribers = [
-      onSnapshot(collection(db, 'users'), (snapshot) => {
-        setPlayers(
-          snapshot.docs
-            .map((item) => {
-              const data = item.data()
-              const role = data.role === 'admin' ? ('admin' as const) : ('user' as const)
-
-              return {
-                id: item.id,
-                name: String(data.name ?? 'Jogador'),
-                email: String(data.email ?? ''),
-                photoURL: typeof data.photoURL === 'string' ? data.photoURL : null,
-                role,
-                approved: role === 'admin' || data.approved === true,
-                notificationsEnabled:
-                  typeof data.notificationsEnabled === 'boolean'
-                    ? data.notificationsEnabled
-                    : defaultNotificationPreferences.notificationsEnabled,
-                notifyOnRoundPublished:
-                  typeof data.notifyOnRoundPublished === 'boolean'
-                    ? data.notifyOnRoundPublished
-                    : defaultNotificationPreferences.notifyOnRoundPublished,
-                notifyOnDeadlineReminder:
-                  typeof data.notifyOnDeadlineReminder === 'boolean'
-                    ? data.notifyOnDeadlineReminder
-                    : defaultNotificationPreferences.notifyOnDeadlineReminder,
-                reminderDaysBefore:
-                  typeof data.reminderDaysBefore === 'number'
-                    ? data.reminderDaysBefore
-                    : defaultNotificationPreferences.reminderDaysBefore,
-                preferredNotificationTime:
-                  typeof data.preferredNotificationTime === 'string'
-                    ? data.preferredNotificationTime
-                    : defaultNotificationPreferences.preferredNotificationTime,
-              }
-            })
-            .sort((a, b) => a.name.localeCompare(b.name)),
-        )
-      }),
       onSnapshot(collection(db, 'competitions', competitionId, 'teams'), (snapshot) => {
         setTeams(snapshot.docs.map((item) => ({ id: item.id, ...item.data() }) as Team))
       }),
@@ -146,38 +114,6 @@ export function useCompetitionData(authUser: User | null) {
             ),
         )
       }),
-      onSnapshot(collection(db, 'competitions', competitionId, 'predictions'), (snapshot) => {
-        setPredictions(
-          snapshot.docs.map((item) => {
-            const data = item.data()
-            return {
-              id: item.id,
-              userId: String(data.userId ?? ''),
-              matchId: String(data.matchId ?? ''),
-              homeScore: Number(data.homeScore ?? 0),
-              awayScore: Number(data.awayScore ?? 0),
-            }
-          }),
-        )
-      }),
-      onSnapshot(collection(db, 'competitions', competitionId, 'competitionPredictions'), (snapshot) => {
-        setCompetitionPredictions(
-          snapshot.docs.map((item) => {
-            const data = item.data()
-
-            return {
-              id: item.id,
-              userId: String(data.userId ?? ''),
-              topScorers: toStringList(data.topScorers),
-              topAssists: toStringList(data.topAssists),
-              bestPlayer: String(data.bestPlayer ?? ''),
-              bestGoalkeeper: String(data.bestGoalkeeper ?? ''),
-              championTeamId: String(data.championTeamId ?? ''),
-              runnerUpTeamId: String(data.runnerUpTeamId ?? ''),
-            }
-          }),
-        )
-      }),
       onSnapshot(collection(db, 'competitions', competitionId, 'competitionPredictionResults'), (snapshot) => {
         const resultDoc = snapshot.docs.find((item) => item.id === 'official')
         const data = resultDoc?.data()
@@ -202,22 +138,6 @@ export function useCompetitionData(authUser: User | null) {
         const deadline = settings?.data()?.deadline
 
         setCompetitionPredictionDeadline(deadline ? toDate(deadline) : null)
-      }),
-      onSnapshot(collection(db, 'competitions', competitionId, 'knockoutPredictions'), (snapshot) => {
-        setKnockoutPredictions(
-          snapshot.docs.map((item) => {
-            const data = item.data()
-
-            return {
-              id: item.id,
-              userId: String(data.userId ?? ''),
-              tieId: String(data.tieId ?? ''),
-              leg: data.leg === 'away' ? ('away' as const) : ('home' as const),
-              homeScore: Number(data.homeScore ?? 0),
-              awayScore: Number(data.awayScore ?? 0),
-            }
-          }),
-        )
       }),
       onSnapshot(collection(db, 'competitions', competitionId, 'knockout'), (snapshot) => {
         setKnockout(
@@ -275,6 +195,132 @@ export function useCompetitionData(authUser: User | null) {
 
     return () => unsubscribers.forEach((unsubscribe) => unsubscribe())
   }, [authUser])
+
+  // Jogadores: o admin le os perfis completos (e-mail, preferencias); os demais
+  // so o perfil publico — nome, foto e se e jogador liberado.
+  useEffect(() => {
+    if (!authUser) {
+      return
+    }
+
+    return onSnapshot(collection(db, isAdmin ? 'users' : 'profiles'), (snapshot) => {
+      setPlayers(
+        snapshot.docs
+          .map((item) => (isAdmin ? userDocToPlayer(item.id, item.data()) : publicProfileToPlayer(item.id, item.data())))
+          .sort((a, b) => a.name.localeCompare(b.name)),
+      )
+    })
+  }, [authUser, isAdmin])
+
+  // Rodadas cujo prazo ja passou: os palpites delas ficam visiveis para todos.
+  // Um timer avisa quando o proximo prazo vence, para liberar sem recarregar.
+  const [now, setNow] = useState(() => Date.now())
+  const closedRoundIds = useMemo(
+    () => rounds.filter((round) => round.deadline.getTime() <= now).map((round) => round.id),
+    [now, rounds],
+  )
+  const closedRoundsKey = closedRoundIds.join('|')
+
+  useEffect(() => {
+    const next = rounds
+      .map((round) => round.deadline.getTime())
+      .filter((time) => time > now)
+      .sort((a, b) => a - b)[0]
+
+    // setTimeout nao aceita mais que ~24 dias; prazos mais longes esperam o proximo recarregamento.
+    if (next === undefined || next - now > 2 ** 31 - 1) {
+      return
+    }
+
+    const timer = window.setTimeout(() => setNow(Date.now()), next - now + 1000)
+
+    return () => window.clearTimeout(timer)
+  }, [now, rounds])
+
+  useEffect(() => {
+    if (!authUser) {
+      return
+    }
+
+    const competition = (name: string) => collection(db, 'competitions', competitionId, name)
+    const mine = (name: string) => query(competition(name), where('userId', '==', authUser.uid))
+    const predictionQueries: Query[] = isAdmin
+      ? [competition('predictions')]
+      : [
+        mine('predictions'),
+        ...closedRoundsKey
+          .split('|')
+          .filter(Boolean)
+          .map((roundId) => query(competition('predictions'), where('roundId', '==', roundId))),
+      ]
+
+    // Cada consulta guarda o seu pedaco; a lista final junta tudo sem repetir
+    // (o meu palpite de uma rodada fechada vem nas duas consultas).
+    const predictionParts = new Map<number, Prediction[]>()
+    const publishPredictions = () => {
+      const byId = new Map<string, Prediction>()
+      predictionParts.forEach((part) => part.forEach((item) => byId.set(item.id, item)))
+      setPredictions([...byId.values()])
+    }
+
+    const unsubscribers = [
+      ...predictionQueries.map((predictionQuery, index) =>
+        onSnapshot(predictionQuery, (snapshot) => {
+          predictionParts.set(
+            index,
+            snapshot.docs.map((item) => {
+              const data = item.data()
+              return {
+                id: item.id,
+                userId: String(data.userId ?? ''),
+                matchId: String(data.matchId ?? ''),
+                roundId: typeof data.roundId === 'string' ? data.roundId : undefined,
+                homeScore: Number(data.homeScore ?? 0),
+                awayScore: Number(data.awayScore ?? 0),
+              }
+            }),
+          )
+          publishPredictions()
+        }),
+      ),
+      onSnapshot(isAdmin ? competition('competitionPredictions') : mine('competitionPredictions'), (snapshot) => {
+        setCompetitionPredictions(
+          snapshot.docs.map((item) => {
+            const data = item.data()
+
+            return {
+              id: item.id,
+              userId: String(data.userId ?? ''),
+              topScorers: toStringList(data.topScorers),
+              topAssists: toStringList(data.topAssists),
+              bestPlayer: String(data.bestPlayer ?? ''),
+              bestGoalkeeper: String(data.bestGoalkeeper ?? ''),
+              championTeamId: String(data.championTeamId ?? ''),
+              runnerUpTeamId: String(data.runnerUpTeamId ?? ''),
+            }
+          }),
+        )
+      }),
+      onSnapshot(isAdmin ? competition('knockoutPredictions') : mine('knockoutPredictions'), (snapshot) => {
+        setKnockoutPredictions(
+          snapshot.docs.map((item) => {
+            const data = item.data()
+
+            return {
+              id: item.id,
+              userId: String(data.userId ?? ''),
+              tieId: String(data.tieId ?? ''),
+              leg: data.leg === 'away' ? ('away' as const) : ('home' as const),
+              homeScore: Number(data.homeScore ?? 0),
+              awayScore: Number(data.awayScore ?? 0),
+            }
+          }),
+        )
+      }),
+    ]
+
+    return () => unsubscribers.forEach((unsubscribe) => unsubscribe())
+  }, [authUser, closedRoundsKey, isAdmin])
 
   return {
     competitionPredictionDeadline,

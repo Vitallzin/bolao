@@ -3,12 +3,14 @@ import type { Player, RankingEntry } from '../../types'
 import './RankingView.css'
 
 type RankingViewProps = {
+  /** Quem esta vendo: a linha dele ganha destaque para se achar na lista de cara. */
+  currentUserId?: string
   lastScoredRoundId?: string | null
   players: Player[]
   ranking: RankingEntry[]
 }
 
-export function RankingView({ lastScoredRoundId, players, ranking }: RankingViewProps) {
+export function RankingView({ currentUserId, lastScoredRoundId, players, ranking }: RankingViewProps) {
   // Enquanto o servidor nao gravar o ranking, mostramos os jogadores zerados —
   // a lista nunca fica vazia so porque o calculo ainda nao rodou.
   const pending = ranking.length === 0
@@ -61,11 +63,17 @@ export function RankingView({ lastScoredRoundId, players, ranking }: RankingView
           const roundPoints = lastScoredRoundId ? player.roundPoints?.[lastScoredRoundId] ?? 0 : null
 
           return (
-            <article className="ranking-row" key={player.userId}>
+            <article
+              className={player.userId === currentUserId ? 'ranking-row ranking-row--me' : 'ranking-row'}
+              key={player.userId}
+            >
               <span className={positionClass}>{place}</span>
 
               <div className="ranking-row__player">
-                <strong>{player.name}</strong>
+                <strong>
+                  {player.name}
+                  {player.userId === currentUserId ? <span className="ranking-row__me">Você</span> : null}
+                </strong>
                 {roundPoints !== null ? (
                   <span className="ranking-row__round">+{roundPoints} na última rodada</span>
                 ) : null}

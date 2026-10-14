@@ -280,14 +280,17 @@
   width: 36px;
 }
 
-.round-nav button:hover:not(:disabled) {
-  animation: card-border-flow 4.5s linear infinite;
-  background:
-    linear-gradient(180deg, #ffffff, #b9e6ff) padding-box,
-    var(--interactive-border) border-box;
-  border-color: transparent;
-  box-shadow: 0 0 24px rgba(14, 165, 233, 0.18);
-  color: #001e67;
+/* So com mouse: no toque o :hover gruda no botao tocado. */
+@media (hover: hover) {
+  .round-nav button:hover:not(:disabled) {
+    animation: card-border-flow 4.5s linear infinite;
+    background:
+      linear-gradient(180deg, #ffffff, #b9e6ff) padding-box,
+      var(--interactive-border) border-box;
+    border-color: transparent;
+    box-shadow: 0 0 24px rgba(14, 165, 233, 0.18);
+    color: #001e67;
+  }
 }
 
 .round-nav button:disabled {

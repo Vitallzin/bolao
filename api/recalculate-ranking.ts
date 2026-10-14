@@ -416,6 +416,9 @@ async function recalculateRanking() {
     predictions: mapDocs<Prediction>(predictionsSnap),
   }
 
+  await backfillPredictionRoundIds(predictionsSnap, input.matches)
+  await syncPublicProfiles(usersSnap)
+
   const lastScoredRoundId = getLastScoredRoundId(input.matches)
 
   const scored = usersSnap.docs
@@ -466,6 +469,78 @@ async function recalculateRanking() {
   })
 
   return entries
+}
+
+/**
+ * profiles/{uid} e a versao publica de users/{uid} (nome, foto, liberado): e o
+ * que os outros jogadores conseguem ler, ja que users tem e-mail e so o dono e o
+ * admin leem. Aqui o servidor cria os que faltam (contas de antes do profiles
+ * existir) e corrige qualquer divergencia — so escreve o que mudou.
+ */
+async function syncPublicProfiles(usersSnap: QuerySnapshot) {
+  const profilesSnap = await db.collection('profiles').get()
+  const current = new Map(profilesSnap.docs.map((item) => [item.id, item.data()]))
+  const batch = db.batch()
+  let writes = 0
+
+  usersSnap.docs.forEach((item) => {
+    const data = item.data()
+    const expected = {
+      approved: data.role === 'admin' || data.approved === true,
+      name: String(data.name ?? 'Jogador'),
+      photoURL: typeof data.photoURL === 'string' ? data.photoURL : null,
+    }
+    const existing = current.get(item.id)
+
+    if (
+      !existing ||
+      existing.approved !== expected.approved ||
+      existing.name !== expected.name ||
+      (existing.photoURL ?? null) !== expected.photoURL
+    ) {
+      batch.set(db.collection('profiles').doc(item.id), expected)
+      writes += 1
+    }
+  })
+
+  // Perfil publico de quem nao existe mais em users (conta apagada).
+  profilesSnap.docs
+    .filter((item) => !usersSnap.docs.some((user) => user.id === item.id))
+    .forEach((item) => {
+      batch.delete(item.ref)
+      writes += 1
+    })
+
+  if (writes > 0) {
+    await batch.commit()
+  }
+}
+
+/**
+ * Palpites antigos foram gravados sem roundId, e as regras do Firestore so
+ * liberam os palpites dos outros consultando por ele (rodada fechada). Aqui o
+ * servidor completa o campo a partir da partida — roda a cada recalculo, mas so
+ * escreve nos que faltam, entao depois da primeira vez nao faz nada.
+ */
+async function backfillPredictionRoundIds(predictionsSnap: QuerySnapshot, matches: Match[]) {
+  const roundByMatch = new Map(matches.map((match) => [match.id, match.roundId]))
+  const missing = predictionsSnap.docs.filter((item) => {
+    const data = item.data()
+    const roundId = roundByMatch.get(String(data.matchId ?? ''))
+
+    return roundId && data.roundId !== roundId
+  })
+
+  // Lote do Firestore aceita ate 500 escritas.
+  for (let start = 0; start < missing.length; start += 500) {
+    const batch = db.batch()
+
+    missing.slice(start, start + 500).forEach((item) => {
+      batch.update(item.ref, { roundId: roundByMatch.get(String(item.data().matchId)) })
+    })
+
+    await batch.commit()
+  }
 }
 
 /**

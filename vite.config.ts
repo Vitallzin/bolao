@@ -7,6 +7,25 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    build: {
+      rolldownOptions: {
+        output: {
+          // Bibliotecas em arquivos proprios: mudam raramente, entao o navegador
+          // as reaproveita do cache entre um deploy e outro e so baixa de novo o
+          // codigo do site, que e o que muda.
+          codeSplitting: {
+            groups: [
+              // Analytics fica de fora: e carregado depois, sob demanda (firebase.ts).
+              {
+                name: 'firebase',
+                test: /node_modules[\\/](@firebase|firebase)[\\/](?!analytics|installations)/,
+              },
+              { name: 'react', test: /node_modules[\\/](react|react-dom|scheduler)[\\/]/ },
+            ],
+          },
+        },
+      },
+    },
     server: {
       port: 5173,
       strictPort: true,

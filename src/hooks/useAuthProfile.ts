@@ -9,11 +9,12 @@ import {
   updateProfile,
   type User,
 } from 'firebase/auth'
-import { doc, getDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'
+import { doc, getDoc, getDocFromCache, onSnapshot, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'
 import { defaultNotificationPreferences } from '../constants'
-import { auth, db, googleProvider } from '../firebase'
+import { auth, clearLocalData, db, googleProvider } from '../firebase'
 import type { NotificationPreferences, Player } from '../types'
 import { getFirebaseMessage } from '../utils/firebaseErrors'
+import { toPublicProfile, userDocToPlayer } from '../utils/userProfile'
 
 export function useAuthProfile() {
   const [authUser, setAuthUser] = useState<User | null>(null)
@@ -57,6 +58,27 @@ export function useAuthProfile() {
       }
     })
   }, [])
+
+  // O proprio perfil em tempo real: liberacao pelo admin, nome trocado em outra
+  // aba etc. Antes isso vinha da lista de todos os usuarios, que agora so o
+  // admin pode ler.
+  const signedInUid = currentUser ? authUser?.uid : undefined
+
+  useEffect(() => {
+    if (!signedInUid || !authUser) {
+      return
+    }
+
+    return onSnapshot(
+      doc(db, 'users', signedInUid),
+      (snapshot) => {
+        if (snapshot.exists()) {
+          setCurrentUser(userDocToPlayer(snapshot.id, snapshot.data(), { photoURL: authUser.photoURL }))
+        }
+      },
+      () => undefined,
+    )
+  }, [authUser, signedInUid])
 
   async function handleGoogleLogin() {
     showMessage('')
@@ -128,6 +150,10 @@ export function useAuthProfile() {
 
   async function handleLogout() {
     await signOut(auth)
+    // Sem o cache, o proximo a usar este navegador nao ve nada do anterior. O
+    // Firestore para ao limpar o cache, entao a pagina recarrega (ja na tela de login).
+    await clearLocalData()
+    window.location.reload()
   }
 
   async function handleProfileNameUpdate(name: string) {
@@ -146,6 +172,7 @@ export function useAuthProfile() {
       name: nextName,
       updatedAt: serverTimestamp(),
     })
+    await setDoc(doc(db, 'profiles', currentUser.id), toPublicProfile({ ...currentUser, name: nextName }), { merge: true })
     setCurrentUser((profile) => profile ? { ...profile, name: nextName } : profile)
     showMessage('Nome atualizado.')
   }
@@ -178,48 +205,31 @@ export function useAuthProfile() {
     messageId,
     refreshEmailVerification,
     resendVerificationEmail,
-    setCurrentUser,
     setMessage: showMessage,
   }
 }
 
 async function ensureUserProfile(user: User, pendingSignUpName: string | null): Promise<Player> {
   const userRef = doc(db, 'users', user.uid)
-  const snapshot = await getDoc(userRef)
+  // Perfil do cache local primeiro: abre a tela sem esperar o servidor. O que
+  // estiver desatualizado (nome, liberacao) chega em seguida pelo onSnapshot do
+  // proprio users/{uid}, logo abaixo em useAuthProfile. Papel e liberacao aqui so mudam a interface —
+  // quem decide o que cada um le e grava sao as regras do Firestore no servidor.
+  // "Nao existe" nunca vem do cache: so o servidor confirma antes de criar um
+  // perfil novo, senao um cache velho recriaria a conta por cima da verdadeira.
+  const cached = await getDocFromCache(userRef).catch(() => null)
+  const snapshot = cached?.exists() ? cached : await getDoc(userRef)
 
   if (snapshot.exists()) {
-    const data = snapshot.data()
-    const role = data.role === 'admin' ? 'admin' : 'user'
-    const profile = {
-      id: snapshot.id,
-      name: String(data.name ?? user.displayName ?? 'Jogador'),
-      email: String(data.email ?? user.email ?? ''),
-      photoURL: String(user.photoURL ?? data.photoURL ?? '') || null,
-      role,
-      approved: role === 'admin' || data.approved === true,
-      notificationsEnabled:
-        typeof data.notificationsEnabled === 'boolean'
-          ? data.notificationsEnabled
-          : defaultNotificationPreferences.notificationsEnabled,
-      notifyOnRoundPublished:
-        typeof data.notifyOnRoundPublished === 'boolean'
-          ? data.notifyOnRoundPublished
-          : defaultNotificationPreferences.notifyOnRoundPublished,
-      notifyOnDeadlineReminder:
-        typeof data.notifyOnDeadlineReminder === 'boolean'
-          ? data.notifyOnDeadlineReminder
-          : defaultNotificationPreferences.notifyOnDeadlineReminder,
-      reminderDaysBefore:
-        typeof data.reminderDaysBefore === 'number'
-          ? data.reminderDaysBefore
-          : defaultNotificationPreferences.reminderDaysBefore,
-      preferredNotificationTime:
-        typeof data.preferredNotificationTime === 'string'
-          ? data.preferredNotificationTime
-          : defaultNotificationPreferences.preferredNotificationTime,
-    } satisfies Player
+    const profile = userDocToPlayer(snapshot.id, snapshot.data(), {
+      email: user.email,
+      name: user.displayName,
+      photoURL: user.photoURL,
+    })
 
-    await setDoc(
+    // So registra o ultimo acesso: a tela nao precisa esperar essa gravacao,
+    // que antes segurava o "Carregando" por mais uma ida ao servidor.
+    void setDoc(
       userRef,
       {
         name: profile.name,
@@ -228,7 +238,10 @@ async function ensureUserProfile(user: User, pendingSignUpName: string | null): 
         lastLoginAt: serverTimestamp(),
       },
       { merge: true },
-    )
+    ).catch(() => undefined)
+    // Mantem o perfil publico (nome, foto, liberado) igual ao privado. Cria o de
+    // quem entrou antes dele existir.
+    void setDoc(doc(db, 'profiles', user.uid), toPublicProfile(profile), { merge: true }).catch(() => undefined)
 
     return profile
   }
@@ -253,6 +266,8 @@ async function ensureUserProfile(user: User, pendingSignUpName: string | null): 
     createdAt: serverTimestamp(),
     lastLoginAt: serverTimestamp(),
   })
+  // Depois do users/{uid}: a regra do perfil publico confere a liberacao nele.
+  await setDoc(doc(db, 'profiles', user.uid), toPublicProfile(profile))
 
   return profile
 }

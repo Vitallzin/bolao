@@ -71,7 +71,9 @@ export function AppHeader({
             onClick={onToggleAdminMode}
             variant="mode"
           >
-            {adminMode ? 'Modo jogador' : 'Modo admin'}
+            {/* No celular cabe so a palavra que muda; o "Modo" sai. */}
+            <span className="label-long">{adminMode ? 'Modo jogador' : 'Modo admin'}</span>
+            <span className="label-short">{adminMode ? 'Jogador' : 'Admin'}</span>
           </Button>
         ) : null}
         <div className="account-menu">
@@ -80,10 +82,11 @@ export function AppHeader({
             className={`account-menu__trigger ${accountOpen ? 'account-menu__trigger--open' : ''}`}
             type="button"
             aria-expanded={accountOpen}
+            aria-label={`Conta de ${currentUser.name}`}
             onClick={toggleAccountMenu}
           >
             <UserAvatar user={currentUser} />
-            <span>{currentUser.name}</span>
+            <span className="account-menu__name">{currentUser.name}</span>
             <b className="account-menu__arrow" aria-hidden="true">v</b>
           </button>
 

@@ -349,6 +349,19 @@ function getPredictionPointTable(stage: string): PointTable {
   return stagePointTables.early
 }
 
+/** 1o-8o vao direto as oitavas, 9o-24o disputam os playoffs, o resto esta eliminado. */
+export function getQualificationZone(rank: number) {
+  if (rank <= 8) {
+    return 'direct' as const
+  }
+
+  if (rank <= 24) {
+    return 'playoff' as const
+  }
+
+  return null
+}
+
 export function buildStandings(teams: Team[], matches: Match[]) {
   const table = new Map(
     teams.map((team) => [

@@ -29,6 +29,7 @@
 }
 
 .match-day {
+  align-content: start;
   display: grid;
   gap: 10px;
 }
@@ -41,6 +42,7 @@
 }
 
 .match-list {
+  align-content: start;
   display: grid;
   gap: 10px;
 }
@@ -74,7 +76,8 @@
   grid-area: away;
 }
 
-.match-row > .match-points {
+.match-row > .match-points,
+.match-row > .save-status {
   grid-area: points;
 }
 
@@ -156,6 +159,18 @@
 .score-group--real {
   border-left: 1px solid var(--app-line);
   padding-left: 12px;
+}
+
+/* O placar real e o dado principal depois do jogo: numero em branco, no
+   lugar do tom apagado; o palpite (campo desabilitado) fica em segundo plano. */
+.score-group--real .score-box {
+  background: rgba(226, 242, 255, 0.1);
+  border-color: rgba(186, 230, 253, 0.38);
+  color: var(--app-title);
+}
+
+.score-group--real .score-group__label {
+  color: #9becff;
 }
 
 .round-status-line {
@@ -311,8 +326,37 @@
   color: #001e67;
 }
 
-.leg-toggle button:not(.active):hover {
-  background: rgba(226, 242, 255, 0.09);
+@media (hover: hover) {
+  .leg-toggle button:not(.active):hover {
+    background: rgba(226, 242, 255, 0.09);
+  }
+}
+
+/* Lado a lado, o jogo N do Dia 1 e o do Dia 2 dividem a mesma linha da grade
+   (subgrid): se um dia ja tem resultado e o outro nao, os cartoes continuam com
+   a mesma altura e os placares ficam alinhados. --match-rows vem do componente. */
+@media (min-width: 901px) {
+  .match-days {
+    column-gap: 14px;
+    grid-template-rows: auto repeat(var(--match-rows, 1), auto);
+    row-gap: 10px;
+  }
+
+  .match-day {
+    grid-row: 1 / span calc(var(--match-rows, 1) + 1);
+    grid-template-rows: subgrid;
+    row-gap: 10px;
+  }
+
+  .match-list {
+    display: contents;
+  }
+
+  /* Cartao mais alto que o conteudo (vizinho com selo de pontos): o conteudo
+     fica no topo, igual nos dois dias. */
+  .match-row {
+    align-content: start;
+  }
 }
 
 @media (max-width: 900px) {
@@ -416,6 +460,29 @@
     width: 100%;
   }
 
+  /* O cabecalho vira coluna com tudo encostado a esquerda (align-items:
+     flex-start); o seletor de rodada volta para o centro. */
+  .predictions-step-nav {
+    align-self: center;
+  }
+
+  /* O margin-left: auto do desktop empurrava o alternador para a direita. */
+  .predictions-audience-toggle {
+    margin: 0 auto;
+  }
+
+  /* Palpites dos outros: pontos e alternador primeiro, e o seletor de jogador
+     desce para logo acima do Dia 1 — fica colado nos palpites que ele troca. */
+  .others-player-nav {
+    margin: 0 auto;
+    order: 1;
+  }
+
+  .others-status-line .round-status-line__right {
+    order: 0;
+  }
+
+
   .predictions-heading-pill {
     display: inline-block;
     font-size: 0.78rem;
@@ -426,4 +493,38 @@
   .predictions-row-pill {
     display: none;
   }
+}
+
+@media (max-width: 620px) {
+  /* Rotulos curtos e menos respiro: cada opcao numa linha so, sem quebrar. */
+  .predictions-audience-toggle button {
+    padding: 8px 16px;
+    white-space: nowrap;
+  }
+}
+
+/* Numeros com cara de transmissao: placares, pontos e colocacao na fonte
+   condensada dos titulos (Oswald), com algarismos de largura fixa para os
+   digitos nao dancarem quando o valor muda. */
+.match-row .score-group__values input,
+.score-box,
+.round-score-summary strong,
+.match-points__value strong {
+  font-family: var(--display);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.match-row .score-group__values input,
+.score-box {
+  font-size: 1.25rem;
+}
+
+.round-score-summary strong {
+  font-size: 1.55rem;
+}
+
+.match-points__value strong {
+  font-size: 1.05rem;
+  letter-spacing: 0.01em;
 }
